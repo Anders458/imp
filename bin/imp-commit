@@ -1,0 +1,50 @@
+#!/bin/bash
+set -euo pipefail
+
+source "$(dirname "$0")/../lib/common.sh"
+
+require_git
+
+diff=$(git diff --cached)
+
+if [[ -z "$diff" ]]; then
+   err "Nothing staged"
+   muted "Stage changes with: git add <files>"
+   exit 1
+fi
+
+info "Generating commit message..."
+
+msg=$(ai_fast "Generate a git commit message for this diff.
+
+Rules:
+- First line: imperative mood, max 50 chars
+- No markdown, no backticks
+- Focus on WHY not WHAT
+
+Diff:
+$diff
+
+Output ONLY the commit message, nothing else:")
+
+echo
+echo "$msg"
+echo
+
+read -p "Use this message? [Y/n/e(dit)] " -n 1 -r
+echo
+
+case "$REPLY" in
+   [Nn])
+      muted "Cancelled"
+      exit 0
+      ;;
+   [Ee])
+      git commit -e -m "$msg"
+      ;;
+   *)
+      git commit -m "$msg"
+      ;;
+esac
+
+success "Committed"

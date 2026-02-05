@@ -1,0 +1,53 @@
+#!/bin/bash
+set -euo pipefail
+
+source "$(dirname "$0")/../lib/common.sh"
+
+require_git
+
+branch="${1:-HEAD}"
+current=$(git branch --show-current)
+
+# On main/master: diff since last tag
+# On feature branch: diff against main/master
+if [[ "$current" == "main" || "$current" == "master" || "$branch" == "main" || "$branch" == "master" ]]; then
+   tag=$(last_tag)
+   if [[ -n "$tag" ]]; then
+      base="$tag"
+   else
+      base=""
+   fi
+else
+   base=$(git merge-base main "$branch" 2> /dev/null \
+      || git merge-base master "$branch" 2> /dev/null \
+      || echo "")
+fi
+
+# Try diff first, fall back to commit log
+if [[ -n "$base" ]]; then
+   diff=$(git diff "$base..$branch" 2> /dev/null | head -500)
+fi
+
+if [[ -n "${diff:-}" ]]; then
+   info "Analyzing ${current:-$branch} since ${base}..."
+
+   desc=$(ai_fast "Describe what this code change does in 2-3 sentences:
+
+$diff")
+else
+   log=$(git log --oneline -10 "$branch" 2> /dev/null || true)
+
+   if [[ -z "$log" ]]; then
+      muted "No commits found"
+      exit 0
+   fi
+
+   info "Analyzing recent commits on ${current:-$branch}..."
+
+   desc=$(ai_fast "Describe what this project has been working on based on these recent commits. 2-3 sentences:
+
+$log")
+fi
+
+echo
+echo "$desc"

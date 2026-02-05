@@ -1,0 +1,61 @@
+#!/bin/bash
+set -euo pipefail
+
+source "$(dirname "$0")/../lib/common.sh"
+
+require_git
+
+repo=$(basename "$(git rev-parse --show-toplevel)")
+branch=$(git branch --show-current)
+
+echo
+info "$repo ($branch)"
+echo
+
+# Uncommitted changes
+changes=$(git status --porcelain)
+if [[ -n "$changes" ]]; then
+   echo "Uncommitted:"
+   echo "$changes" | while read -r line; do
+      muted "  $line"
+   done
+   echo
+fi
+
+# Unpushed commits
+tag=$(last_tag)
+if [[ -n "$tag" ]]; then
+   unpushed=$(git log --oneline "$tag..HEAD" 2> /dev/null || true)
+else
+   unpushed=$(git log --oneline -10 2> /dev/null || true)
+fi
+
+if [[ -n "$unpushed" ]]; then
+   count=$(echo "$unpushed" | wc -l | tr -d ' ')
+   echo "Unpushed ($count):"
+   echo "$unpushed" | while read -r line; do
+      muted "  $line"
+   done
+   echo
+fi
+
+# Worktrees
+worktrees=$(git worktree list 2> /dev/null | tail -n +1)
+wt_count=$(echo "$worktrees" | wc -l | tr -d ' ')
+
+if [[ $wt_count -gt 1 ]]; then
+   echo "Worktrees:"
+   echo "$worktrees" | while read -r line; do
+      if echo "$line" | grep -q "$(pwd)"; then
+         echo "  $line (here)"
+      else
+         muted "  $line"
+      fi
+   done
+   echo
+fi
+
+# Show last tag
+if [[ -n "$tag" ]]; then
+   muted "Last tag: $tag"
+fi

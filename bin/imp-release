@@ -1,0 +1,188 @@
+#!/bin/bash
+set -euo pipefail
+
+source "$(dirname "$0")/../lib/common.sh"
+
+require_git
+
+CHANGELOG="CHANGELOG.md"
+
+# Bail if working tree is dirty
+if [[ -n "$(git status --porcelain)" ]]; then
+   err "Uncommitted changes. Commit or stash first."
+   exit 1
+fi
+
+# --- Gather commits ---
+
+tag=$(last_tag)
+
+if [[ -n "$tag" ]]; then
+   log=$(git log --oneline "$tag..HEAD" 2> /dev/null || true)
+else
+   log=$(git log --oneline -20 2> /dev/null || true)
+fi
+
+if [[ -z "$log" ]]; then
+   muted "No commits since ${tag:-beginning}"
+   exit 0
+fi
+
+count=$(echo "$log" | wc -l | tr -d ' ')
+
+echo
+echo "Commits since ${tag:-beginning} ($count):"
+echo "$log" | while read -r line; do
+   muted "  $line"
+done
+echo
+
+# --- Version bump ---
+
+current=""
+if [[ -n "$tag" ]]; then
+   current="${tag#v}"
+fi
+current="${current:-0.0.0}"
+
+echo "Current version: $current"
+echo
+echo "  [p] patch  → $(bump_version "$current" patch)"
+echo "  [m] minor  → $(bump_version "$current" minor)"
+echo "  [M] major  → $(bump_version "$current" major)"
+echo "  [c] custom"
+echo "  [q] quit"
+echo
+
+read -p "Bump: " -n 1 -r
+echo
+
+case "$REPLY" in
+   p | P) new_version=$(bump_version "$current" patch) ;;
+   m) new_version=$(bump_version "$current" minor) ;;
+   M) new_version=$(bump_version "$current" major) ;;
+   c | C)
+      read -rp "Enter version: " new_version
+      ;;
+   *)
+      muted "Cancelled"
+      exit 0
+      ;;
+esac
+
+# --- Generate changelog entry ---
+
+info "Analyzing changes..."
+
+entry=$(ai_smart "Generate a changelog entry from these commits.
+
+Use Keep a Changelog format with sections (skip empty ones):
+### Added
+### Changed
+### Fixed
+### Removed
+
+Be concise. No commit hashes.
+
+Commits:
+$log
+
+Output ONLY the changelog sections:")
+
+echo
+echo "v$new_version"
+echo "────────────────────────────────────"
+echo "$entry"
+echo "────────────────────────────────────"
+echo
+
+if ! confirm "Release v$new_version?"; then
+   muted "Cancelled"
+   exit 0
+fi
+
+# --- Generate commit summary ---
+
+summary=$(ai_fast "Write a git commit subject line for these changes. Max 50 chars, imperative mood, no quotes, no markdown, no period:
+
+$entry
+
+Output ONLY the subject line:")
+
+# --- Update CHANGELOG.md ---
+
+today=$(date +%Y-%m-%d)
+new_entry="## [$new_version] - $today
+
+$entry"
+
+if [[ -f "$CHANGELOG" ]]; then
+   tmpfile=$(mktemp)
+   if grep -q "## \[Unreleased\]" "$CHANGELOG"; then
+      awk -v entry="$new_entry" '
+         { print }
+         /## \[Unreleased\]/ && !done { print ""; print entry; done=1 }
+      ' "$CHANGELOG" > "$tmpfile"
+   else
+      awk -v entry="$new_entry" '
+         /^## / && !done { print entry; print ""; done=1 }
+         { print }
+      ' "$CHANGELOG" > "$tmpfile"
+   fi
+   mv "$tmpfile" "$CHANGELOG"
+else
+   cat > "$CHANGELOG" << EOF
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [Unreleased]
+
+$new_entry
+EOF
+fi
+
+success "Updated $CHANGELOG"
+
+# --- Squash or commit ---
+
+can_squash=false
+if [[ -n "$tag" ]]; then
+   if git rev-parse --verify "@{u}" > /dev/null 2>&1; then
+      unpushed=$(git log --oneline "@{u}..HEAD" 2> /dev/null)
+      if [[ -n "$unpushed" ]]; then
+         can_squash=true
+      fi
+   else
+      can_squash=true
+   fi
+fi
+
+commit_body=$(printf "%s\n\n%s" "$summary" "$entry")
+
+if [[ "$can_squash" == "true" ]]; then
+   git add "$CHANGELOG"
+   git reset --soft "$tag"
+   git commit -m "$commit_body"
+   success "Squashed $count commits"
+else
+   git add "$CHANGELOG"
+   git commit -m "$commit_body"
+   if [[ -n "$tag" ]]; then
+      muted "Commits already pushed, skipped squash"
+   fi
+fi
+
+# --- Tag ---
+
+git tag "v$new_version"
+success "Tagged v$new_version"
+
+# --- Push ---
+
+echo
+if confirm "Push?" "n"; then
+   git push
+   git push --tags
+   success "Pushed"
+fi
