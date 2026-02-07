@@ -31,15 +31,14 @@ echo
 echo "$msg"
 echo
 
-read -p "Use this message? [Y/n/e(dit)] " -n 1 -r
-echo
+read -rp "Use this message? [Y/n/e] " choice
 
-case "$REPLY" in
-   [Nn])
+case "$choice" in
+   n | N)
       muted "Cancelled"
       exit 0
       ;;
-   [Ee])
+   e | E)
       git commit -e -m "$msg"
       ;;
    *)

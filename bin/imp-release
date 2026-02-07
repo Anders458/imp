@@ -47,17 +47,16 @@ current="${current:-0.0.0}"
 
 echo "Current version: $current"
 echo
-echo "  [p] patch  → $(bump_version "$current" patch)"
-echo "  [m] minor  → $(bump_version "$current" minor)"
-echo "  [M] major  → $(bump_version "$current" major)"
-echo "  [c] custom"
-echo "  [q] quit"
+echo "  p = patch  → $(bump_version "$current" patch)"
+echo "  m = minor  → $(bump_version "$current" minor)"
+echo "  M = major  → $(bump_version "$current" major)"
+echo "  c = custom"
+echo "  q = quit"
 echo
 
-read -p "Bump: " -n 1 -r
-echo
+read -rp "Bump: " choice
 
-case "$REPLY" in
+case "$choice" in
    p | P) new_version=$(bump_version "$current" patch) ;;
    m) new_version=$(bump_version "$current" minor) ;;
    M) new_version=$(bump_version "$current" major) ;;
@@ -96,9 +95,23 @@ echo "$entry"
 echo "────────────────────────────────────"
 echo
 
-if ! confirm "Release v$new_version?"; then
+read -rp "Release v$new_version? [y/N] " confirm_release
+if [[ ! "$confirm_release" =~ ^[Yy]$ ]]; then
    muted "Cancelled"
    exit 0
+fi
+
+# --- Check push feasibility before mutating ---
+
+will_push=false
+read -rp "Push after release? [y/N] " confirm_push
+if [[ "$confirm_push" =~ ^[Yy]$ ]]; then
+   will_push=true
+   remote=$(git remote | head -1)
+   if [[ -z "$remote" ]]; then
+      err "No remote configured. Add one with: git remote add origin <url>"
+      exit 1
+   fi
 fi
 
 # --- Generate commit summary ---
@@ -109,12 +122,37 @@ $entry
 
 Output ONLY the subject line:")
 
-# --- Update CHANGELOG.md ---
+# --- Prepare changelog content ---
 
 today=$(date +%Y-%m-%d)
 new_entry="## [$new_version] - $today
 
 $entry"
+
+# --- Save state for rollback ---
+
+original_head=$(git rev-parse HEAD)
+original_changelog=""
+if [[ -f "$CHANGELOG" ]]; then
+   original_changelog=$(cat "$CHANGELOG")
+fi
+
+rollback() {
+   warn "Rolling back..."
+   git tag -d "v$new_version" 2> /dev/null || true
+   git reset --hard "$original_head" 2> /dev/null || true
+   if [[ -n "$original_changelog" ]]; then
+      echo "$original_changelog" > "$CHANGELOG"
+   else
+      rm -f "$CHANGELOG"
+   fi
+   err "Release failed. Rolled back to previous state."
+   exit 1
+}
+
+trap rollback ERR
+
+# --- Update CHANGELOG.md ---
 
 if [[ -f "$CHANGELOG" ]]; then
    tmpfile=$(mktemp)
@@ -149,7 +187,7 @@ success "Updated $CHANGELOG"
 can_squash=false
 if [[ -n "$tag" ]]; then
    if git rev-parse --verify "@{u}" > /dev/null 2>&1; then
-      unpushed=$(git log --oneline "@{u}..HEAD" 2> /dev/null)
+      unpushed=$(git log --oneline "@{u}..HEAD" 2> /dev/null || true)
       if [[ -n "$unpushed" ]]; then
          can_squash=true
       fi
@@ -180,9 +218,16 @@ success "Tagged v$new_version"
 
 # --- Push ---
 
-echo
-if confirm "Push?" "n"; then
-   git push
+if [[ "$will_push" == "true" ]]; then
+   if git rev-parse --verify "@{u}" > /dev/null 2>&1; then
+      git push
+   else
+      branch=$(git branch --show-current)
+      git push -u origin "$branch"
+   fi
    git push --tags
    success "Pushed"
 fi
+
+# Disable rollback trap on success
+trap - ERR

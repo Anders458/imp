@@ -41,15 +41,14 @@ confirm() {
    local default="${2:-y}"
 
    if [[ "$default" == "y" ]]; then
-      read -p "$msg [Y/n] " -n 1 -r
+      read -rp "$msg [Y/n] "
    else
-      read -p "$msg [y/N] " -n 1 -r
+      read -rp "$msg [y/N] "
    fi
-   echo
 
    case "$REPLY" in
-      [Yy]) return 0 ;;
-      [Nn]) return 1 ;;
+      [Yy]*) return 0 ;;
+      [Nn]*) return 1 ;;
       "")
          [[ "$default" == "y" ]] && return 0 || return 1
          ;;
