@@ -202,7 +202,11 @@ trap - ERR
 
 if [[ "$will_push" == "true" ]]; then
    if has_upstream; then
-      git push
+      if [[ "$can_squash" == "true" ]]; then
+         git push --force-with-lease
+      else
+         git push
+      fi
    else
       branch=$(git branch --show-current)
       git push -u origin "$branch"

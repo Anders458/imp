@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.4] - 2026-02-17
+
+### Changed
+- Use `--force-with-lease` for squashed commits to preserve history integrity
+
 ## [0.0.3] - 2026-02-17
 
 ### Added
