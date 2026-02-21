@@ -15,10 +15,7 @@ fi
 
 header "Branch"
 
-muted "Generating name..."
-echo
-
-name=$(ai_fast "$(prompt_branch "$desc")")
+name=$(spin "Generating name..." ai_fast "$(prompt_branch "$desc")")
 name=$(echo "$name" | tr -d '[:space:]')
 
 validate_branch "$name"

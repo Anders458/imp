@@ -23,10 +23,7 @@ fi
 
 header "Fix Issue #$issue"
 
-muted "Fetching issue..."
-echo
-
-issue_data=$(gh issue view "$issue" --json title,body,labels 2>&1) || {
+issue_data=$(spin "Fetching issue..." gh issue view "$issue" --json title,body,labels 2>&1) || {
    err "Could not fetch issue #$issue"
    exit 1
 }
@@ -38,9 +35,7 @@ label "Issue"
 echo "  #$issue: $issue_title"
 echo
 
-muted "Generating branch name..."
-
-branch_name=$(ai_fast "Suggest a git branch name for fixing this issue:
+branch_name=$(spin "Generating branch name..." ai_fast "Suggest a git branch name for fixing this issue:
 
 Title: $issue_title
 Description: $issue_body

@@ -12,10 +12,7 @@ if ! get_diff "${1:-}"; then
    exit 0
 fi
 
-muted "Analyzing $DIFF_CONTEXT..."
-echo
-
-explanation=$(ai_fast "$(prompt_diff "$DIFF")")
+explanation=$(spin "Analyzing $DIFF_CONTEXT..." ai_fast "$(prompt_diff "$DIFF")")
 
 divider
 echo "$explanation" | md

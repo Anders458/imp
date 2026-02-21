@@ -187,3 +187,35 @@ line2")
    [[ "$result" == *"line1"* ]]
    [[ "$result" == *"line2"* ]]
 }
+
+# === gum helpers ===
+
+@test "HAS_GUM: defaults to false in tests" {
+   [[ "$HAS_GUM" == "false" ]]
+}
+
+@test "IMP_NO_GUM: disables gum detection" {
+   export IMP_NO_GUM=1
+   source "$IMP_ROOT/lib/common.sh"
+   [[ "$HAS_GUM" == "false" ]]
+}
+
+@test "gum_choose: fallback returns first option on invalid input" {
+   result=$(gum_choose "Pick" "alpha" "beta" <<< "99")
+   [[ "$result" == "alpha" ]]
+}
+
+@test "gum_choose: fallback returns selected option" {
+   result=$(gum_choose "Pick" "alpha" "beta" "gamma" <<< "2")
+   [[ "$result" == "beta" ]]
+}
+
+@test "gum_input: fallback reads from stdin" {
+   result=$(gum_input "Name:" "placeholder" <<< "hello")
+   [[ "$result" == "hello" ]]
+}
+
+@test "spin: fallback runs command directly" {
+   result=$(spin "Working..." echo "done")
+   [[ "$result" == *"done"* ]]
+}

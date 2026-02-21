@@ -30,12 +30,9 @@ echo
 
 show_items "Commits" "$log"
 
-muted "Generating PR..."
-echo
-
 diff=$(git diff "$base..$branch" | head -1000)
 
-pr_content=$(ai_smart "$(prompt_pr "$branch" "$log" "$diff")")
+pr_content=$(spin "Generating PR..." ai_smart "$(prompt_pr "$branch" "$log" "$diff")")
 
 title=$(echo "$pr_content" | grep "^TITLE:" | sed 's/^TITLE: //')
 description=$(echo "$pr_content" | sed '1,/^DESCRIPTION:/d')
@@ -54,10 +51,14 @@ echo "$description" | md
 divider
 echo
 
-read -rp "Create PR? [y/N/e] " choice
+if [[ "$HAS_GUM" == "true" ]]; then
+   choice=$(gum choose --header "Create PR?" "Yes" "Edit" "No")
+else
+   read -rp "Create PR? [y/N/e] " choice
+fi
 
 case "$choice" in
-   e | E)
+   e | E | Edit)
       tmpfile=$(mktemp)
       printf "%s\n\n%s" "$title" "$description" > "$tmpfile"
       ${EDITOR:-vim} "$tmpfile"
@@ -65,7 +66,7 @@ case "$choice" in
       description=$(tail -n +3 "$tmpfile")
       rm -f "$tmpfile"
       ;;
-   y | Y) ;;
+   y | Y | Yes) ;;
    *)
       muted "Cancelled"
       exit 0
@@ -73,8 +74,7 @@ case "$choice" in
 esac
 
 if ! has_upstream; then
-   muted "Pushing to origin..."
-   git push -u origin "$branch"
+   spin "Pushing to origin..." git push -u origin "$branch"
 fi
 
 pr_url=$(gh pr create --title "$title" --body "$description" --base "$base" 2>&1) || {

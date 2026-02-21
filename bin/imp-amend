@@ -14,19 +14,18 @@ if [[ "$total" -eq 0 ]]; then
    exit 1
 fi
 
-staged=$(git diff --cached)
-
-if [[ -n "$staged" ]]; then
-   show_items "Staged" "$(git diff --cached --name-only)"
-fi
+git add -A
 
 last_msg=$(git log -1 --pretty=%B | head -1)
 
 if [[ "$total" -eq 1 ]]; then
    combined=$(git show --format= HEAD)
+   staged=$(git diff --cached)
    [[ -n "$staged" ]] && combined="${combined}"$'\n'"${staged}"
 else
    combined=$(git diff HEAD~1)
+   staged=$(git diff --cached)
+   [[ -n "$staged" ]] && combined="${combined}"$'\n'"${staged}"
 fi
 
 if [[ -z "$combined" ]]; then
@@ -34,10 +33,7 @@ if [[ -z "$combined" ]]; then
    exit 1
 fi
 
-muted "Generating message..."
-echo
-
-msg=$(ai_fast "$(prompt_commit "$combined")")
+msg=$(spin "Generating message..." ai_fast "$(prompt_commit "$combined")")
 
 label "Previous"
 item "$last_msg"

@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.5] - 2026-02-21
+
+### Added
+- Gum spinners for improved UX during operations
+
+### Changed
+- Command names aligned with actual behavior
+- Version accuracy and tag conflict prevention
+
+## [0.0.5] - 2026-02-21
+
+### Added
+- Automatically install gum during setup
+- Support for gum spin with shell functions
+
+### Changed
+- Replace read prompts with gum spinners for better UX
+- Reduce duplication of post-spin blank lines
+
 ## [0.0.4] - 2026-02-17
 
 ### Changed

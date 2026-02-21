@@ -24,10 +24,7 @@ if [[ -n "$base" ]]; then
 fi
 
 if [[ -n "$diff" ]]; then
-   muted "Analyzing ${current:-$branch} since ${base}..."
-   echo
-
-   desc=$(ai_fast "$(prompt_describe "$diff" "diff")")
+   desc=$(spin "Analyzing ${current:-$branch} since ${base}..." ai_fast "$(prompt_describe "$diff" "diff")")
 else
    log=$(git log --oneline -10 "$branch" 2> /dev/null || true)
 
@@ -36,14 +33,11 @@ else
       exit 0
    fi
 
-   muted "Analyzing recent commits..."
-   echo
-
-   desc=$(ai_fast "$(prompt_describe "$log" "log")")
+   desc=$(spin "Analyzing recent commits..." ai_fast "$(prompt_describe "$log" "log")")
 fi
 
 divider
 echo "$desc" | md
 divider
 
-hint "imp release to ship, or imp list for overview"
+hint "imp release to ship, or imp status for overview"

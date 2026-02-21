@@ -140,10 +140,10 @@ teardown() {
    [[ "$output" == *"No changes"* ]]
 }
 
-# === imp list ===
+# === imp status ===
 
-@test "list: shows repo overview" {
-   run "$IMP_ROOT/bin/imp-list"
+@test "status: shows repo overview" {
+   run "$IMP_ROOT/bin/imp-status"
    [[ "$status" -eq 0 ]]
    [[ "$output" == *"Branch"* ]]
    [[ "$output" == *"main"* ]]

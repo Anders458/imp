@@ -20,8 +20,7 @@ label "Branch"
 echo "  $branch"
 echo
 
-muted "Fetching..."
-git fetch
+spin "Fetching..." git fetch
 
 behind=$(count_behind)
 ahead=$(count_ahead)
@@ -60,4 +59,4 @@ if [[ "$ahead" -gt 0 || "$behind" -gt 0 ]]; then
    fi
 fi
 
-hint "imp list to see status"
+hint "imp status to see overview"

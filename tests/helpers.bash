@@ -22,6 +22,10 @@ teardown_test_repo() {
    rm -rf "$TEST_DIR"
 }
 
+# Disable gum in tests so all tests use fallback paths
+export HAS_GUM=false
+export IMP_NO_GUM=1
+
 # Mock AI to avoid real API calls
 mock_ai() {
    local response="$1"

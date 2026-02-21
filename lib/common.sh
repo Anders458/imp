@@ -8,6 +8,13 @@ IMP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$IMP_ROOT/lib/ai.sh"
 source "$IMP_ROOT/lib/prompts.sh"
 
+# === Gum ===
+
+HAS_GUM=false
+if [[ "${IMP_NO_GUM:-}" != "1" ]] && command -v gum &> /dev/null; then
+   HAS_GUM=true
+fi
+
 # === Colors ===
 
 RED='\033[0;31m'
@@ -83,6 +90,15 @@ confirm() {
    local msg="${1:-Continue?}"
    local default="${2:-y}"
 
+   if [[ "$HAS_GUM" == "true" ]]; then
+      if [[ "$default" == "y" ]]; then
+         gum confirm "$msg" --default=yes
+      else
+         gum confirm "$msg" --default=no
+      fi
+      return $?
+   fi
+
    if [[ "$default" == "y" ]]; then
       read -rp "$msg [Y/n] "
    else
@@ -104,6 +120,7 @@ confirm() {
 # Returns 1 on cancel (caller handles cleanup)
 confirm_commit() {
    local msg="$1"
+   local choice
 
    shift
 
@@ -112,11 +129,15 @@ confirm_commit() {
    divider
    echo
 
-   read -rp "Use this message? [Y/n/e] " choice
+   if [[ "$HAS_GUM" == "true" ]]; then
+      choice=$(gum choose "Yes" "Edit" "No")
+   else
+      read -rp "Use this message? [Y/n/e] " choice
+   fi
 
    case "$choice" in
-      n | N) return 1 ;;
-      e | E) git commit "$@" -e -m "$msg" ;;
+      n | N | No) return 1 ;;
+      e | E | Edit) git commit "$@" -e -m "$msg" ;;
       *) git commit "$@" -m "$msg" ;;
    esac
 }
@@ -131,6 +152,82 @@ edit_in_editor() {
    ${EDITOR:-vim} "$tmpfile"
    cat "$tmpfile"
    rm -f "$tmpfile"
+}
+
+# === Gum Wrappers ===
+
+# Run command with spinner. Captures stdout.
+# Usage: result=$(spin "title" command arg1 arg2)
+# Runs command in background since gum spin can't call shell functions.
+spin() {
+   local title="$1"
+
+   shift
+
+   if [[ "$HAS_GUM" == "true" ]]; then
+      local tmp rc=0
+
+      tmp=$(mktemp)
+      "$@" > "$tmp" &
+      local pid=$!
+      gum spin --spinner dot --title "$title" -- bash -c "while kill -0 $pid 2>/dev/null; do sleep 0.1; done"
+      wait "$pid" || rc=$?
+      cat "$tmp"
+      rm -f "$tmp"
+      return "$rc"
+   else
+      muted "$title" >&2
+      echo >&2
+      "$@"
+   fi
+}
+
+# Prompt for text input
+# Usage: value=$(gum_input "prompt" "placeholder")
+gum_input() {
+   local prompt="$1"
+   local placeholder="${2:-}"
+
+   if [[ "$HAS_GUM" == "true" ]]; then
+      gum input --header "$prompt" --placeholder "$placeholder"
+   else
+      local reply
+
+      read -rp "$prompt " reply
+      echo "$reply"
+   fi
+}
+
+# Choose from a list of options
+# Usage: choice=$(gum_choose "header" "opt1" "opt2" "opt3")
+gum_choose() {
+   local hdr="$1"
+
+   shift
+
+   if [[ "$HAS_GUM" == "true" ]]; then
+      gum choose --header "$hdr" "$@"
+   else
+      local i=1
+      local opts=("$@")
+
+      echo "$hdr" >&2
+      for opt in "${opts[@]}"; do
+         echo "  $i) $opt" >&2
+         ((i++))
+      done
+
+      local reply
+
+      read -rp "Choice [1-${#opts[@]}]: " reply
+      if [[ "$reply" =~ ^[0-9]+$ ]] \
+         && [[ "$reply" -ge 1 ]] \
+         && [[ "$reply" -le "${#opts[@]}" ]]; then
+         echo "${opts[$((reply - 1))]}"
+      else
+         echo "${opts[0]}"
+      fi
+   fi
 }
 
 # === Git Helpers ===
@@ -260,7 +357,7 @@ bump_version() {
 
 # === Rendering ===
 
-# Render markdown to ANSI (uses glow if available)
+# Render markdown to ANSI (glow > gum > sed fallback)
 md() {
    local input
 
@@ -268,6 +365,8 @@ md() {
 
    if command -v glow &> /dev/null; then
       echo "$input" | glow -s dark -w 80 -
+   elif [[ "$HAS_GUM" == "true" ]]; then
+      echo "$input" | gum format -t markdown
    else
       echo "$input" \
          | sed -E "s/^### (.*)$/$(printf '\033[1;36m')\\1$(printf '\033[0m')/" \

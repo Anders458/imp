@@ -24,10 +24,7 @@ fi
 
 header "Commit"
 
-muted "Generating message..."
-echo
-
-msg=$(ai_fast "$(prompt_commit "$diff")")
+msg=$(spin "Generating message..." ai_fast "$(prompt_commit "$diff")")
 
 if ! confirm_commit "$msg"; then
    muted "Cancelled"

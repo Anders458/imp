@@ -34,5 +34,22 @@ else
    echo "  $path_line"
 fi
 
+if ! command -v gum &> /dev/null; then
+   echo
+   echo "Installing gum (TUI toolkit)..."
+   if command -v brew &> /dev/null; then
+      brew install gum
+   elif command -v go &> /dev/null; then
+      go install github.com/charmbracelet/gum@latest
+      gum_bin="$(go env GOPATH)/bin/gum"
+      if [[ -f "$gum_bin" ]] && ! command -v gum &> /dev/null; then
+         ln -sf "$gum_bin" "$IMP_ROOT/bin/gum"
+      fi
+   else
+      echo "Could not install gum automatically"
+      echo "  https://github.com/charmbracelet/gum#installation"
+   fi
+fi
+
 echo
 echo "Installed. Run: imp doctor"

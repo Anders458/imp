@@ -36,12 +36,9 @@ if [[ -z "$diff" && -z "$staged" ]]; then
    exit 0
 fi
 
-muted "Generating stash message..."
-echo
-
 combined="${diff}"$'\n'"${staged}"
 
-msg=$(ai_fast "$(prompt_stash "$combined")")
+msg=$(spin "Generating stash message..." ai_fast "$(prompt_stash "$combined")")
 
 label "Message"
 echo "  $msg"

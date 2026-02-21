@@ -32,6 +32,7 @@ check "ollama" "ollama" "https://ollama.com" "false"
 check "gh" "gh" "https://cli.github.com" "false"
 check "jq" "jq" "https://jqlang.github.io/jq/download" "false"
 check "glow" "glow" "https://github.com/charmbracelet/glow" "false"
+check "gum" "gum" "https://github.com/charmbracelet/gum" "false"
 
 echo
 

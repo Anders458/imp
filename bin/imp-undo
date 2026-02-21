@@ -40,9 +40,7 @@ if has_upstream; then
    fi
 fi
 
-read -rp "Undo $count commit(s)? (changes stay staged) [y/N] " choice
-
-if [[ ! "$choice" =~ ^[Yy]$ ]]; then
+if ! confirm "Undo $count commit(s)? (changes stay staged)" "n"; then
    muted "Cancelled"
    exit 0
 fi
