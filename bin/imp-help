@@ -30,6 +30,7 @@ echo
 echo -e "${BOLD}Staying in sync${RESET}"
 echo -e "  imp sync                                  ${MUTED}# pull, rebase, push${RESET}"
 echo -e "  imp status                                ${MUTED}# repo overview${RESET}"
+echo -e "  imp log                                   ${MUTED}# pretty commit graph${RESET}"
 echo
 
 echo -e "${BOLD}Shipping${RESET}"

@@ -32,10 +32,7 @@ mock_ai() {
 
    # Create a fake claude that returns canned response
    mkdir -p "$TEST_DIR/.bin"
-   cat > "$TEST_DIR/.bin/claude" << SCRIPT
-#!/bin/bash
-echo "$response"
-SCRIPT
+   printf '%s\n' '#!/bin/bash' "printf '%s\\n' $(printf '%q' "$response")" > "$TEST_DIR/.bin/claude"
    chmod +x "$TEST_DIR/.bin/claude"
    export PATH="$TEST_DIR/.bin:$PATH"
    export IMP_AI_PROVIDER=claude

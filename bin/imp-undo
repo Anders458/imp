@@ -26,16 +26,12 @@ if [[ "$count" -gt "$total" ]]; then
    exit 1
 fi
 
-label "Commits to undo"
-git log --oneline -n "$count" | while read -r line; do
-   item "$line"
-done
-echo
+show_items "Commits to undo" "$(git log --oneline -n "$count")"
 
 if has_upstream; then
    ahead=$(count_ahead)
    if [[ "$count" -gt "$ahead" ]]; then
-      warn "Warning: some commits are already pushed"
+      warn "Some commits are already pushed"
       echo
    fi
 fi

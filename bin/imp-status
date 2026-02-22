@@ -15,9 +15,42 @@ label "Branch"
 echo "  $branch"
 echo
 
-changes=$(git status --porcelain)
+changes=$(git status --short -uall)
 if [[ -n "$changes" ]]; then
-   show_items "Uncommitted" "$changes"
+   # Batch numstats into a newline-delimited lookup string (Bash 3.2 compatible)
+   numstats=""
+   while read -r added removed file; do
+      [[ -n "$file" ]] && numstats="${numstats}${file}	${added} ${removed}"$'\n'
+   done < <(git diff --numstat 2> /dev/null || true)
+   while read -r added removed file; do
+      [[ -n "$file" ]] && numstats="${numstats}${file}	${added} ${removed}"$'\n'
+   done < <(git diff --cached --numstat 2> /dev/null || true)
+
+   label "Changes"
+   while IFS= read -r line; do
+      status="${line:0:2}"
+      file="${line:3}"
+
+      stats=""
+      match=$(echo "$numstats" | grep -F "${file}	" | tail -1 || true)
+      if [[ -n "$match" ]]; then
+         nums="${match#*	}"
+         added="${nums%% *}"
+         removed="${nums##* }"
+         stats=" ${GREEN}+${added}${RESET} ${RED}-${removed}${RESET}"
+      fi
+
+      case "$status" in
+         " M" | "MM") echo -e "  ${YELLOW}M${RESET}  ${file}${stats}" ;;
+         "M ") echo -e "  ${GREEN}M${RESET}  ${file}${stats}" ;;
+         " D" | "D ") echo -e "  ${RED}D${RESET}  ${file}" ;;
+         "A " | "AM") echo -e "  ${GREEN}A${RESET}  ${file}${stats}" ;;
+         "R "* | "RM"*) echo -e "  ${CYAN}R${RESET}  ${file}" ;;
+         "??") echo -e "  ${MUTED}?${RESET}  ${file}" ;;
+         *) echo -e "  ${status}  ${file}${stats}" ;;
+      esac
+   done <<< "$changes"
+   echo
 fi
 
 if [[ -n "$tag" ]]; then

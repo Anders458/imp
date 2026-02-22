@@ -185,10 +185,85 @@ teardown() {
    [[ "$output" == *"numeric"* ]]
 }
 
+# === imp describe ===
+
+@test "describe: shows description for branch" {
+   echo "a" >> file.txt && git add file.txt && git commit -m "add feature"
+   echo "b" >> file.txt && git add file.txt && git commit -m "refine feature"
+   mock_ai "This branch adds a feature"
+   run "$IMP_ROOT/bin/imp-describe"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"This branch adds a feature"* ]]
+}
+
+# === imp revert ===
+
+@test "revert: reverts a specific commit" {
+   echo "a" >> file.txt && git add file.txt && git commit -m "second commit"
+   local hash
+   hash=$(git rev-parse --short HEAD)
+   mock_ai "Revert second commit"
+   # First confirm = "Create revert commit?", second = "Use this message?"
+   run "$IMP_ROOT/bin/imp-revert" "$hash" <<< $'y\ny'
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"Reverted"* ]]
+}
+
+# === imp sync ===
+
+@test "sync: fails without upstream" {
+   echo ".bin" > .gitignore
+   git add .gitignore && git commit -m "gitignore"
+   run "$IMP_ROOT/bin/imp-sync"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"No upstream branch"* ]]
+}
+
+# === imp status ===
+
+@test "status: shows changes when dirty" {
+   echo "dirty" >> file.txt
+   run "$IMP_ROOT/bin/imp-status"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"Changes"* ]]
+   [[ "$output" == *"file.txt"* ]]
+}
+
+# === imp log ===
+
+@test "log: shows commit graph" {
+   echo "a" >> file.txt && git add file.txt && git commit -m "second"
+   run "$IMP_ROOT/bin/imp-log"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"second"* ]]
+   [[ "$output" == *"Initial commit"* ]]
+}
+
+@test "log: respects -n count" {
+   echo "a" >> file.txt && git add file.txt && git commit -m "second"
+   echo "b" >> file.txt && git add file.txt && git commit -m "third"
+   run "$IMP_ROOT/bin/imp-log" -n 1
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"third"* ]]
+   [[ "$output" != *"Initial commit"* ]]
+}
+
 # === imp init ===
 
 @test "init: fails inside existing repo" {
    run "$IMP_ROOT/bin/imp-init"
    [[ "$status" -ne 0 ]]
    [[ "$output" == *"Already a git repository"* ]]
+}
+
+@test "init: succeeds outside git repo" {
+   local init_dir
+   init_dir=$(mktemp -d)
+   cd "$init_dir"
+   mock_ai "node_modules/"
+   run "$IMP_ROOT/bin/imp-init" <<< $'y\nn'
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"Initialized"* ]]
+   cd /
+   rm -rf "$init_dir"
 }

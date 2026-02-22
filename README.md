@@ -5,7 +5,7 @@ AI-powered git toolkit. Small shell scripts, pluggable AI backend, zero dependen
 ## Install
 
 ```bash
-git clone https://github.com/yourusername/imp.git
+git clone https://github.com/anders458/imp.git
 cd imp
 ./install.sh
 source ~/.bashrc
@@ -44,7 +44,8 @@ imp pr          Create pull request with AI title and description
 imp diff        Explain changes in plain English
 imp review      AI code review of staged or unstaged changes
 imp describe    Explain what a branch does
-imp list        Show repo overview (branch, changes, commits)
+imp status      Show repo overview (branch, changes, commits)
+imp log         Pretty commit graph
 ```
 
 ### Release
@@ -144,7 +145,8 @@ imp/
 │   ├── imp-fix
 │   ├── imp-help
 │   ├── imp-init
-│   ├── imp-list
+│   ├── imp-log
+│   ├── imp-status
 │   ├── imp-pr
 │   ├── imp-release
 │   ├── imp-revert
@@ -174,6 +176,7 @@ imp/
 - [gh](https://cli.github.com) (optional, for `imp fix` and `imp pr`)
 - [jq](https://jqlang.github.io/jq/download) (optional, for Ollama provider and `imp fix`)
 - [glow](https://github.com/charmbracelet/glow) (optional, for rich markdown rendering)
+- [gum](https://github.com/charmbracelet/gum) (optional, for interactive TUI prompts)
 
 ## License
 

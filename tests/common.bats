@@ -219,3 +219,46 @@ line2")
    result=$(spin "Working..." echo "done")
    [[ "$result" == *"done"* ]]
 }
+
+# === md ===
+
+@test "md: sed fallback renders bold" {
+   result=$(echo "**bold text**" | md)
+   [[ "$result" == *"bold text"* ]]
+   # Should contain ANSI bold escape
+   [[ "$result" == *$'\033[1m'* ]]
+}
+
+@test "md: sed fallback renders inline code" {
+   result=$(echo "\`code\`" | md)
+   [[ "$result" == *"code"* ]]
+}
+
+# === count_ahead / count_behind ===
+
+@test "count_ahead: returns 0 without upstream" {
+   result=$(count_ahead)
+   [[ "$result" == "0" ]]
+}
+
+@test "count_behind: returns 0 without upstream" {
+   result=$(count_behind)
+   [[ "$result" == "0" ]]
+}
+
+# === sanitize ===
+
+@test "sanitize: strips newlines" {
+   result=$(printf "hello\nworld\n" | sanitize)
+   [[ "$result" == "helloworld" ]]
+}
+
+@test "sanitize: strips leading and trailing whitespace" {
+   result=$(printf "  hello  " | sanitize)
+   [[ "$result" == "hello" ]]
+}
+
+@test "sanitize: handles mixed whitespace and newlines" {
+   result=$(printf "\n  feat/branch  \n" | sanitize)
+   [[ "$result" == "feat/branch" ]]
+}

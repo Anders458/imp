@@ -2,7 +2,7 @@
 set -euo pipefail
 
 IMP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-IMP_VERSION="0.0.2"
+IMP_VERSION="0.0.7"
 
 BOLD='\033[1m'
 MUTED='\033[0;90m'
@@ -30,6 +30,7 @@ usage() {
    echo "  review     AI code review of changes"
    echo "  describe   Explain what a branch does"
    echo "  status     Show repo overview"
+   echo "  log        Pretty commit graph"
    echo
    echo -e "${MUTED}Release${RESET}"
    echo "  release    Squash, changelog, tag, and push"

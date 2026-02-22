@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.8] - 2026-02-21
+
+### Changed
+- Consolidated v0.0.5 changes into main development branch
+
 ## [0.0.7] - 2026-02-21
 
 ### Changed
@@ -20,16 +25,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Command names aligned with actual behavior
 - Version accuracy and tag conflict prevention
-
-## [0.0.5] - 2026-02-21
-
-### Added
-- Automatically install gum during setup
-- Support for gum spin with shell functions
-
-### Changed
-- Replace read prompts with gum spinners for better UX
-- Reduce duplication of post-spin blank lines
 
 ## [0.0.4] - 2026-02-17
 

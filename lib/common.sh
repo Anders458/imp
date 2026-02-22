@@ -20,7 +20,6 @@ fi
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 MUTED='\033[0;90m'
 BOLD='\033[1m'
@@ -52,10 +51,6 @@ err() {
 
 warn() {
    echo -e "${YELLOW}$1${RESET}"
-}
-
-info() {
-   echo -e "${BLUE}$1${RESET}"
 }
 
 muted() {
@@ -148,10 +143,13 @@ edit_in_editor() {
    local tmpfile
 
    tmpfile=$(mktemp)
+   # shellcheck disable=SC2064
+   trap "rm -f '$tmpfile'" EXIT
    echo "$content" > "$tmpfile"
    ${EDITOR:-vim} "$tmpfile"
    cat "$tmpfile"
    rm -f "$tmpfile"
+   trap - EXIT
 }
 
 # === Gum Wrappers ===
@@ -168,12 +166,15 @@ spin() {
       local tmp rc=0
 
       tmp=$(mktemp)
+      # shellcheck disable=SC2064
+      trap "rm -f '$tmp'" EXIT
       "$@" > "$tmp" &
       local pid=$!
       gum spin --spinner dot --title "$title" -- bash -c "while kill -0 $pid 2>/dev/null; do sleep 0.1; done"
       wait "$pid" || rc=$?
       cat "$tmp"
       rm -f "$tmp"
+      trap - EXIT
       return "$rc"
    else
       muted "$title" >&2
@@ -355,6 +356,14 @@ bump_version() {
    esac
 }
 
+# === Sanitization ===
+
+# Strip newlines and leading/trailing whitespace from AI output
+# Used for single-line values (branch names, commit subjects, stash messages)
+sanitize() {
+   tr -d '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
 # === Rendering ===
 
 # Render markdown to ANSI (glow > gum > sed fallback)
@@ -362,6 +371,7 @@ md() {
    local input
 
    input=$(cat)
+   input=$(echo "$input" | sed '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
 
    if command -v glow &> /dev/null; then
       echo "$input" | glow -s dark -w 80 -

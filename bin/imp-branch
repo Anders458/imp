@@ -16,7 +16,7 @@ fi
 header "Branch"
 
 name=$(spin "Generating name..." ai_fast "$(prompt_branch "$desc")")
-name=$(echo "$name" | tr -d '[:space:]')
+name=$(echo "$name" | sanitize)
 
 validate_branch "$name"
 
@@ -30,4 +30,5 @@ if confirm "Create branch?"; then
    hint "make changes, then imp commit"
 else
    muted "Cancelled"
+   exit 0
 fi

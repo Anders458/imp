@@ -94,14 +94,38 @@ prompt_describe() {
    local type="$2"
 
    if [[ "$type" == "diff" ]]; then
-      echo "Describe what this code change does in 2-3 sentences:
+      cat << EOF
+Describe what this code change does in 2-3 sentences:
 
-$content"
+$content
+EOF
    else
-      echo "Describe what this project has been working on based on these recent commits. 2-3 sentences:
+      cat << EOF
+Describe what this project has been working on based on these recent commits. 2-3 sentences:
 
-$content"
+$content
+EOF
    fi
+}
+
+prompt_fix() {
+   local title="$1"
+   local body="$2"
+
+   cat << EOF
+Suggest a git branch name for fixing this issue:
+
+Title: $title
+Description: $body
+
+Rules:
+- Lowercase, hyphens only
+- Max 30 chars
+- Format: fix/<short-name>
+- Include issue number if fits
+
+Output ONLY the branch name:
+EOF
 }
 
 prompt_pr() {

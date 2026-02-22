@@ -51,11 +51,7 @@ echo "$description" | md
 divider
 echo
 
-if [[ "$HAS_GUM" == "true" ]]; then
-   choice=$(gum choose --header "Create PR?" "Yes" "Edit" "No")
-else
-   read -rp "Create PR? [y/N/e] " choice
-fi
+choice=$(gum_choose "Create PR?" "Yes" "Edit" "No")
 
 case "$choice" in
    e | E | Edit)
