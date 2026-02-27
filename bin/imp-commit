@@ -24,7 +24,22 @@ fi
 
 header "Commit"
 
-msg=$(spin "Generating message..." ai_fast "$(prompt_commit "$diff")")
+branch=$(git branch --show-current 2> /dev/null || echo "")
+msg=$(spin "Generating message..." ai_fast "$(prompt_commit "$diff" "$branch")")
+msg=$(echo "$msg" | sanitize)
+
+if ! validate_commit "$msg"; then
+   warn "Retrying (invalid format)..."
+   msg=$(spin "Generating message..." ai_fast "$(prompt_commit "$diff" "$branch")")
+   msg=$(echo "$msg" | sanitize)
+
+   if ! validate_commit "$msg"; then
+      err "AI output not in Conventional Commits format"
+      item "$msg"
+      hint "imp commit, then edit manually"
+      exit 1
+   fi
+fi
 
 if ! confirm_commit "$msg"; then
    muted "Cancelled"

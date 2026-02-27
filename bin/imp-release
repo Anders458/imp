@@ -65,11 +65,11 @@ if [[ "$HAS_GUM" == "true" ]]; then
    esac
 else
    label "Version bump"
-   echo "  p  patch   $patch_ver"
-   echo "  m  minor   $minor_ver"
-   echo "  M  major   $major_ver"
-   echo "  c  custom"
-   echo "  q  quit"
+   item "p  patch   $patch_ver"
+   item "m  minor   $minor_ver"
+   item "M  major   $major_ver"
+   item "c  custom"
+   item "q  quit"
    echo
    muted "Current: $current"
    echo
@@ -97,12 +97,11 @@ if git rev-parse "v$new_version" &> /dev/null; then
 fi
 
 if [[ -n "$tag" ]]; then
-   release_diff=$(git diff "$tag..HEAD" 2> /dev/null || true)
+   subjects=$(git log --format='%s' "$tag..HEAD")
 else
-   release_diff=$(git diff HEAD~"$count"..HEAD 2> /dev/null || true)
+   subjects=$(git log --format='%s' -"$count")
 fi
-
-entry=$(spin "Analyzing changes..." ai_smart "$(prompt_changelog "$log" "$release_diff")")
+entry=$(echo "$subjects" | changelog_from_commits)
 
 label "v$new_version"
 divider
@@ -147,7 +146,7 @@ if confirm "Push after release?"; then
    fi
 fi
 
-summary=$(spin "Generating summary..." ai_fast "$(prompt_release_summary "$entry")")
+summary="chore: release v$new_version"
 today=$(date +%Y-%m-%d)
 new_entry="## [$new_version] - $today
 
@@ -181,18 +180,27 @@ trap rollback ERR
 
 if [[ -f "$CHANGELOG" ]]; then
    tmpfile=$(mktemp)
-   if grep -q "## \[Unreleased\]" "$CHANGELOG"; then
-      awk -v entry="$new_entry" '
-         { print }
-         /## \[Unreleased\]/ && !done { print ""; print entry; done=1 }
-      ' "$CHANGELOG" > "$tmpfile"
+   entry_file=$(mktemp)
+   printf '%s\n' "$new_entry" > "$entry_file"
+
+   # Find first ## heading (any indentation) and insert before it
+   insert_line=$(grep -n '^[[:space:]]*## ' "$CHANGELOG" | head -1 | cut -d: -f1)
+
+   if [[ -n "$insert_line" ]]; then
+      head -n "$((insert_line - 1))" "$CHANGELOG" > "$tmpfile"
+      echo >> "$tmpfile"
+      cat "$entry_file" >> "$tmpfile"
+      echo >> "$tmpfile"
+      tail -n +"$insert_line" "$CHANGELOG" >> "$tmpfile"
    else
-      awk -v entry="$new_entry" '
-         /^## / && !done { print entry; print ""; done=1 }
-         { print }
-      ' "$CHANGELOG" > "$tmpfile"
+      # No ## heading found; append after file header
+      cat "$CHANGELOG" > "$tmpfile"
+      echo >> "$tmpfile"
+      cat "$entry_file" >> "$tmpfile"
    fi
+
    mv "$tmpfile" "$CHANGELOG"
+   rm -f "$entry_file"
 else
    cat > "$CHANGELOG" << EOF
 # Changelog
@@ -217,17 +225,15 @@ if [[ -n "$tag" ]]; then
    fi
 fi
 
-commit_body=$(printf "%s\n\n%s" "$summary" "$entry")
-
 if [[ "$can_squash" == "true" ]]; then
    git reset --soft "$tag"
    git add -A
-   git commit -m "$commit_body"
+   git commit -m "$summary"
    committed=true
    success "Squashed $count commits"
 else
    git add "$CHANGELOG"
-   git commit -m "$commit_body"
+   git commit -m "$summary"
    committed=true
    if [[ -n "$tag" ]]; then
       muted "Commits already pushed, skipped squash"
@@ -252,6 +258,14 @@ if [[ "$will_push" == "true" ]]; then
    fi
    git push origin "v$new_version"
    success "Pushed to origin"
+
+   if command -v gh &> /dev/null; then
+      gh release create "v$new_version" \
+         --title "v$new_version" \
+         --notes "$entry" 2> /dev/null \
+         && success "Created GitHub release" \
+         || muted "GitHub release skipped (gh auth or repo issue)"
+   fi
 fi
 
 hint "make changes, then imp commit"

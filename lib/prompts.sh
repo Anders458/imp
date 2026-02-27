@@ -5,28 +5,34 @@
 
 prompt_commit() {
    local diff="$1"
-   local files
+   local branch="${2:-}"
+   local ticket=""
 
-   files=$(echo "$diff" | grep -c '^diff --git' || true)
+   # Extract ticket from branch name (e.g. IMP-123, JIRA-456, feat/ABC-789)
+   if [[ "$branch" =~ ([A-Z]+-[0-9]+) ]]; then
+      ticket="${BASH_REMATCH[1]}"
+   fi
+
+   local ticket_rule=""
+   if [[ -n "$ticket" ]]; then
+      ticket_rule="- Include ticket $ticket after the type, e.g. \"fix: $ticket message\""
+   fi
 
    cat << EOF
-Generate a git commit message for this diff ($files files changed).
+Generate a Conventional Commits message for this diff.
+
+Format: type: message
+Types: feat, fix, refactor, build, chore, docs, test, style, perf, ci
+$ticket_rule
 
 Rules:
-- Subject line: imperative mood, max 50 chars, no period
-- If more than one change, add a blank line then a body paragraph
-- Body must be prose, not bullet points: use semicolons to separate distinct changes
-- Write as a human would: natural, concise, no filler
-- No markdown, no backticks, no quotes, no bullet points, no dashes
-- Mention all affected areas when multiple files change
-
-Example for a multi-change commit:
-Harden AI pipeline and expand test coverage
-
-Pipe prompts via stdin to remove argument size limits; add 120s
-timeout to claude calls; strip leading blank lines in markdown
-renderer; add sanitize helper for single-line AI output and apply
-it to branch, fix, and stash commands.
+- Subject only, one line, max 72 chars, no period
+- ALL LOWERCASE after the colon (except ticket IDs like IMP-123)
+- Imperative mood: "add" not "added", "fix" not "fixes"
+- Pick the type that best fits the primary change
+- No markdown, no backticks, no quotes
+- No body, no bullet points, just the subject line
+- Output will be validated against commitlint rules; it must pass
 
 Diff:
 $diff
@@ -49,16 +55,6 @@ Output ONLY the branch name:
 EOF
 }
 
-prompt_stash() {
-   cat << EOF
-Generate a short stash message. Max 50 chars, no quotes, no backticks:
-
-$1
-
-Output ONLY the message:
-EOF
-}
-
 prompt_revert() {
    local commit_msg="$1"
    local diff="$2"
@@ -72,16 +68,6 @@ Changes reverted:
 $diff
 
 Output ONLY the commit message:
-EOF
-}
-
-prompt_diff() {
-   cat << EOF
-Explain what these code changes do in plain English. Be concise, use bullet points for multiple changes:
-
-$1
-
-Output ONLY the explanation:
 EOF
 }
 
@@ -103,25 +89,6 @@ $1
 
 Output ONLY the review:
 EOF
-}
-
-prompt_describe() {
-   local content="$1"
-   local type="$2"
-
-   if [[ "$type" == "diff" ]]; then
-      cat << EOF
-Describe what this code change does in 2-3 sentences:
-
-$content
-EOF
-   else
-      cat << EOF
-Describe what this project has been working on based on these recent commits. 2-3 sentences:
-
-$content
-EOF
-   fi
 }
 
 prompt_fix() {
@@ -173,46 +140,43 @@ Output ONLY in this format:
 EOF
 }
 
-prompt_changelog() {
-   local log="$1"
-   local diff="$2"
+prompt_split() {
+   local file_diffs="$1"
+   local branch="${2:-}"
+   local ticket=""
+
+   # Extract ticket from branch name (e.g. IMP-123, JIRA-456, feat/ABC-789)
+   if [[ "$branch" =~ ([A-Z]+-[0-9]+) ]]; then
+      ticket="${BASH_REMATCH[1]}"
+   fi
+
+   local ticket_rule=""
+   if [[ -n "$ticket" ]]; then
+      ticket_rule="- Include ticket $ticket after the type, e.g. \"fix: $ticket message\""
+   fi
 
    cat << EOF
-Generate a changelog entry from these code changes.
+Group these changed files into logical commits. Each group = one commit.
 
-Use the diff as the primary source of truth. The commit messages are for context only.
-Be thorough: every meaningful change should have its own line.
+Format: type: message
+Types: feat, fix, refactor, build, chore, docs, test, style, perf, ci
+$ticket_rule
 
-Each line must start with a prefix: Added, Changed, Fixed, or Removed.
-Format: "- Added: description" or "- Fixed: description"
-Skip prefixes that don't apply. Be specific about what changed. No commit hashes.
+Rules:
+- Output a JSON array, no markdown fences, no explanation
+- Each element: {"files": ["path1", "path2"], "message": "type: description"}
+- ALL LOWERCASE after the colon (except ticket IDs like IMP-123)
+- Imperative mood: "add" not "added", "fix" not "fixes"
+- Max 72 chars per message, no period at end
+- Every file must appear in exactly one group
+- Minimize number of groups (prefer fewer, larger groups)
+- Group by logical change, not by directory
 
-Commits:
-$log
+Branch: $branch
 
-Diff:
-$diff
+File diffs:
+$file_diffs
 
-Output ONLY the changelog lines:
-EOF
-}
-
-prompt_release_summary() {
-   cat << EOF
-Write a git commit subject line for these changes. Max 50 chars, imperative mood, no quotes, no markdown, no period:
-
-$1
-
-Output ONLY the subject line:
-EOF
-}
-
-prompt_gitignore() {
-   cat << EOF
-Generate a .gitignore for this project based on the files present:
-
-$1
-
-Output ONLY the .gitignore content, no explanation:
+Output ONLY the JSON array:
 EOF
 }

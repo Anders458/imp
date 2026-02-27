@@ -25,7 +25,7 @@ if [[ -z "$log" ]]; then
 fi
 
 label "Branch"
-echo "  $branch → $base"
+item "$branch → $base"
 echo
 
 show_items "Commits" "$log"
@@ -43,7 +43,7 @@ if [[ -z "$title" ]]; then
 fi
 
 label "Title"
-echo "  $title"
+item "$title"
 echo
 label "Description"
 divider
@@ -56,11 +56,14 @@ choice=$(gum_choose "Create PR?" "Yes" "Edit" "No")
 case "$choice" in
    e | E | Edit)
       tmpfile=$(mktemp)
+      # shellcheck disable=SC2064
+      trap "rm -f '$tmpfile'" EXIT
       printf "%s\n\n%s" "$title" "$description" > "$tmpfile"
       ${EDITOR:-vim} "$tmpfile"
       title=$(head -1 "$tmpfile")
       description=$(tail -n +3 "$tmpfile")
       rm -f "$tmpfile"
+      trap - EXIT
       ;;
    y | Y | Yes) ;;
    *)
@@ -80,6 +83,6 @@ pr_url=$(gh pr create --title "$title" --body "$description" --base "$base" 2>&1
 
 echo
 success "Created PR"
-echo "  $pr_url"
+item "$pr_url"
 
 hint "gh pr view --web to open in browser"

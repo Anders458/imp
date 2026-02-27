@@ -220,6 +220,29 @@ line2")
    [[ "$result" == *"done"* ]]
 }
 
+# === validate_commit ===
+
+@test "validate_commit: accepts valid conventional commits" {
+   validate_commit "feat: add login page"
+   validate_commit "fix: resolve null pointer"
+   validate_commit "refactor(auth): simplify token flow"
+   validate_commit "build: IMP-123 update deploy script"
+   validate_commit "chore!: drop node 14 support"
+}
+
+@test "validate_commit: rejects non-conventional messages" {
+   run validate_commit "Add login page"
+   [[ "$status" -ne 0 ]]
+   run validate_commit "FEAT: uppercase type"
+   [[ "$status" -ne 0 ]]
+   run validate_commit "feat:"
+   [[ "$status" -ne 0 ]]
+   run validate_commit "feat:missing space"
+   [[ "$status" -ne 0 ]]
+   run validate_commit "feat: Uppercase description"
+   [[ "$status" -ne 0 ]]
+}
+
 # === md ===
 
 @test "md: sed fallback renders bold" {
@@ -261,4 +284,39 @@ line2")
 @test "sanitize: handles mixed whitespace and newlines" {
    result=$(printf "\n  feat/branch  \n" | sanitize)
    [[ "$result" == "feat/branch" ]]
+}
+
+# === changelog_from_commits ===
+
+@test "changelog_from_commits: groups by type" {
+   result=$(printf "feat: add login\nfix: resolve crash\nrefactor: simplify auth\n" | changelog_from_commits)
+   [[ "$result" == *"- Added: add login"* ]]
+   [[ "$result" == *"- Fixed: resolve crash"* ]]
+   [[ "$result" == *"- Changed: simplify auth"* ]]
+}
+
+@test "changelog_from_commits: Added before Changed before Fixed" {
+   result=$(printf "fix: bug\nfeat: feature\nchore: cleanup\n" | changelog_from_commits)
+   added_pos=$(echo "$result" | grep -n "Added" | head -1 | cut -d: -f1)
+   changed_pos=$(echo "$result" | grep -n "Changed" | head -1 | cut -d: -f1)
+   fixed_pos=$(echo "$result" | grep -n "Fixed" | head -1 | cut -d: -f1)
+   [[ "$added_pos" -lt "$changed_pos" ]]
+   [[ "$changed_pos" -lt "$fixed_pos" ]]
+}
+
+@test "changelog_from_commits: handles scoped commits" {
+   result=$(printf "feat(auth): add oauth\nfix(db): connection leak\n" | changelog_from_commits)
+   [[ "$result" == *"- Added: add oauth"* ]]
+   [[ "$result" == *"- Fixed: connection leak"* ]]
+}
+
+@test "changelog_from_commits: non-conventional commits become Changed" {
+   result=$(printf "update readme\n" | changelog_from_commits)
+   [[ "$result" == *"- Changed: update readme"* ]]
+}
+
+@test "changelog_from_commits: skips empty input" {
+   result=$(echo "" | changelog_from_commits) && status=0 || status=$?
+   [[ "$status" -ne 0 ]]
+   [[ -z "$result" ]]
 }

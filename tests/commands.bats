@@ -4,7 +4,7 @@ load helpers
 
 setup() {
    setup_test_repo
-   mock_ai "Test commit message"
+   mock_ai "test: add unit tests"
 }
 
 teardown() {
@@ -59,10 +59,20 @@ teardown() {
 
 # === imp branch ===
 
-@test "branch: fails with no description" {
+@test "branch: no args lists branches" {
+   echo ".bin" > .gitignore
+   git add .gitignore && git commit -m "gitignore"
+   git checkout -b feat/other
+   git checkout main
+   run "$IMP_ROOT/bin/imp-branch" <<< "1"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"feat/other"* ]]
+}
+
+@test "branch: no args shows only branch when alone" {
    run "$IMP_ROOT/bin/imp-branch"
-   [[ "$status" -ne 0 ]]
-   [[ "$output" == *"Missing description"* ]]
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"Only one branch"* ]]
 }
 
 @test "branch: creates branch from AI suggestion" {
@@ -100,36 +110,6 @@ teardown() {
    run "$IMP_ROOT/bin/imp-undo" 99
    [[ "$status" -ne 0 ]]
    [[ "$output" == *"Only 1 commits"* ]]
-}
-
-# === imp stash ===
-
-@test "stash: list shows nothing when empty" {
-   run "$IMP_ROOT/bin/imp-stash" list
-   [[ "$status" -eq 0 ]]
-   [[ "$output" == *"No stashes"* ]]
-}
-
-@test "stash: fails with no changes" {
-   run "$IMP_ROOT/bin/imp-stash"
-   [[ "$status" -eq 0 ]]
-   [[ "$output" == *"No changes to stash"* ]]
-}
-
-@test "stash: stashes changes with AI message" {
-   echo "wip" >> file.txt
-   run "$IMP_ROOT/bin/imp-stash" <<< "y"
-   [[ "$status" -eq 0 ]]
-   [[ -z "$(git diff)" ]]
-   [[ -n "$(git stash list)" ]]
-}
-
-# === imp diff ===
-
-@test "diff: shows no changes when clean" {
-   run "$IMP_ROOT/bin/imp-diff"
-   [[ "$status" -eq 0 ]]
-   [[ "$output" == *"No changes"* ]]
 }
 
 # === imp review ===
@@ -185,17 +165,6 @@ teardown() {
    [[ "$output" == *"numeric"* ]]
 }
 
-# === imp describe ===
-
-@test "describe: shows description for branch" {
-   echo "a" >> file.txt && git add file.txt && git commit -m "add feature"
-   echo "b" >> file.txt && git add file.txt && git commit -m "refine feature"
-   mock_ai "This branch adds a feature"
-   run "$IMP_ROOT/bin/imp-describe"
-   [[ "$status" -eq 0 ]]
-   [[ "$output" == *"This branch adds a feature"* ]]
-}
-
 # === imp revert ===
 
 @test "revert: reverts a specific commit" {
@@ -248,17 +217,14 @@ teardown() {
    [[ "$output" != *"Initial commit"* ]]
 }
 
-# === imp init ===
-
 # === imp release ===
 
 @test "release: creates tag and updates changelog" {
    echo ".bin" > .gitignore
-   git add .gitignore && git commit -m "gitignore"
+   git add .gitignore && git commit -m "chore: add gitignore"
    git tag v0.0.1
-   echo "a" >> file.txt && git add file.txt && git commit -m "add feature"
-   echo "b" >> file.txt && git add file.txt && git commit -m "fix bug"
-   mock_ai "- Changed: test improvements"
+   echo "a" >> file.txt && git add file.txt && git commit -m "feat: add feature"
+   echo "b" >> file.txt && git add file.txt && git commit -m "fix: resolve bug"
    # p=patch, y=confirm changelog, n=don't push
    run "$IMP_ROOT/bin/imp-release" <<< $'p\ny\nn'
    [[ "$status" -eq 0 ]]
@@ -266,18 +232,20 @@ teardown() {
    # Changelog must exist and contain the version
    [[ -f CHANGELOG.md ]]
    grep -q "0.0.2" CHANGELOG.md
+   # Changelog should contain categorized entries
+   grep -q "Added: add feature" CHANGELOG.md
+   grep -q "Fixed: resolve bug" CHANGELOG.md
    # Changelog must be in the commit, not just on disk
    git show --stat HEAD | grep -q "CHANGELOG.md"
 }
 
 @test "release: squashes commits since last tag" {
    echo ".bin" > .gitignore
-   git add .gitignore && git commit -m "gitignore"
+   git add .gitignore && git commit -m "chore: add gitignore"
    git tag v1.0.0
-   echo "a" >> file.txt && git add file.txt && git commit -m "one"
-   echo "b" >> file.txt && git add file.txt && git commit -m "two"
-   echo "c" >> file.txt && git add file.txt && git commit -m "three"
-   mock_ai "- Added: new stuff"
+   echo "a" >> file.txt && git add file.txt && git commit -m "feat: add one"
+   echo "b" >> file.txt && git add file.txt && git commit -m "feat: add two"
+   echo "c" >> file.txt && git add file.txt && git commit -m "fix: resolve three"
    run "$IMP_ROOT/bin/imp-release" <<< $'p\ny\nn'
    [[ "$status" -eq 0 ]]
    [[ "$output" == *"Squashed 3 commits"* ]]
@@ -287,22 +255,122 @@ teardown() {
    [[ "$count" -eq 1 ]]
 }
 
-# === imp init ===
+# === imp done ===
 
-@test "init: fails inside existing repo" {
-   run "$IMP_ROOT/bin/imp-init"
-   [[ "$status" -ne 0 ]]
-   [[ "$output" == *"Already a git repository"* ]]
+@test "done: switches to main and deletes branch" {
+   echo ".bin" > .gitignore
+   git add .gitignore && git commit -m "gitignore"
+   git checkout -b feat/cleanup
+   echo "a" >> file.txt && git add file.txt && git commit -m "work"
+   git checkout main
+   git merge feat/cleanup
+   git checkout feat/cleanup
+   run "$IMP_ROOT/bin/imp-done"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"Deleted local branch feat/cleanup"* ]]
+   [[ $(git branch --show-current) == "main" ]]
+   # Branch should be gone
+   run git branch --list feat/cleanup
+   [[ -z "$output" ]]
 }
 
-@test "init: succeeds outside git repo" {
-   local init_dir
-   init_dir=$(mktemp -d)
-   cd "$init_dir"
-   mock_ai "node_modules/"
-   run "$IMP_ROOT/bin/imp-init" <<< $'y\nn'
+@test "done: fails on base branch" {
+   run "$IMP_ROOT/bin/imp-done"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"Already on main"* ]]
+}
+
+@test "done: fails with dirty working tree" {
+   git checkout -b feat/dirty
+   echo "dirty" >> file.txt
+   run "$IMP_ROOT/bin/imp-done"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"Uncommitted changes"* ]]
+}
+
+# === imp clean ===
+
+@test "clean: deletes merged branches" {
+   git checkout -b feat/merged
+   echo "a" >> file.txt && git add file.txt && git commit -m "work"
+   git checkout main
+   git merge feat/merged
+   run "$IMP_ROOT/bin/imp-clean" <<< "y"
    [[ "$status" -eq 0 ]]
-   [[ "$output" == *"Initialized"* ]]
-   cd /
-   rm -rf "$init_dir"
+   [[ "$output" == *"Deleted feat/merged"* ]]
+   run git branch --list feat/merged
+   [[ -z "$output" ]]
+}
+
+@test "clean: nothing to clean when no merged branches" {
+   run "$IMP_ROOT/bin/imp-clean" <<< "y"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"No merged branches"* ]]
+}
+
+# === imp split ===
+
+@test "split: fails with no changes" {
+   run "$IMP_ROOT/bin/imp-split"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"No changes"* ]]
+}
+
+@test "split: fails with only 1 file" {
+   echo "change" >> file.txt
+   run "$IMP_ROOT/bin/imp-split"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"Only 1 file"* ]]
+}
+
+@test "split: creates multiple commits" {
+   echo "auth code" > auth.sh
+   echo "db code" > db.sh
+   git add auth.sh db.sh
+   mock_ai '[{"files":["auth.sh"],"message":"feat: add auth module"},{"files":["db.sh"],"message":"feat: add db module"}]'
+   run "$IMP_ROOT/bin/imp-split" <<< "y"
+   [[ "$status" -eq 0 ]]
+   # Initial + 2 split commits
+   [[ $(git log --oneline | wc -l) -eq 3 ]]
+   [[ "$output" == *"Group 1"* ]]
+   [[ "$output" == *"Group 2"* ]]
+}
+
+@test "split: rejects invalid JSON" {
+   echo "a" > a.txt
+   echo "b" > b.txt
+   mock_ai "this is not json at all"
+   run "$IMP_ROOT/bin/imp-split"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"invalid JSON"* ]]
+}
+
+@test "split: rejects file mismatch" {
+   echo "a" > a.txt
+   echo "b" > b.txt
+   echo "c" > c.txt
+   mock_ai '[{"files":["a.txt"],"message":"feat: add a"},{"files":["b.txt"],"message":"feat: add b"}]'
+   run "$IMP_ROOT/bin/imp-split"
+   [[ "$status" -ne 0 ]]
+   [[ "$output" == *"mismatch"* ]]
+}
+
+@test "split: cancellation preserves state" {
+   echo "a" > a.txt
+   echo "b" > b.txt
+   mock_ai '[{"files":["a.txt"],"message":"feat: add a"},{"files":["b.txt"],"message":"feat: add b"}]'
+   run "$IMP_ROOT/bin/imp-split" <<< "n"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"Cancelled"* ]]
+   # Only the initial commit
+   [[ $(git log --oneline | wc -l) -eq 1 ]]
+}
+
+@test "split: handles single group response" {
+   echo "a" > a.txt
+   echo "b" > b.txt
+   mock_ai '[{"files":["a.txt","b.txt"],"message":"feat: add files"}]'
+   run "$IMP_ROOT/bin/imp-split"
+   [[ "$status" -eq 0 ]]
+   [[ "$output" == *"single commit"* ]]
 }

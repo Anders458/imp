@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+
+## [0.0.10] - 2026-02-26
+
+- Added: add split, done, clean commands and branch switching
+- Changed: normalize output to use item helper
+- Changed: remove stash, diff, describe, and init commands
+- Fixed: improve reliability and ux across commands
+
 ## [0.0.9] - 2026-02-24
 
 - Changed: Pipe AI prompts via stdin instead of passing as shell arguments, removing argument size limits

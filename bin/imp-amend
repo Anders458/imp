@@ -14,18 +14,15 @@ if [[ "$total" -eq 0 ]]; then
    exit 1
 fi
 
-git add -A
-
 last_msg=$(git log -1 --pretty=%s)
 
+# Build diff without staging so we don't destroy the user's index on cancel
 if [[ "$total" -eq 1 ]]; then
    combined=$(git show --format= HEAD)
-   staged=$(git diff --cached)
-   [[ -n "$staged" ]] && combined="${combined}"$'\n'"${staged}"
+   changes=$(git diff HEAD)
+   [[ -n "$changes" ]] && combined="${combined}"$'\n'"${changes}"
 else
    combined=$(git diff HEAD~1)
-   staged=$(git diff --cached)
-   [[ -n "$staged" ]] && combined="${combined}"$'\n'"${staged}"
 fi
 
 if [[ -z "$combined" ]]; then
@@ -39,6 +36,9 @@ label "Previous"
 item "$last_msg"
 echo
 label "New"
+
+# Stage everything right before commit
+git add -A
 
 if ! confirm_commit "$msg" --amend; then
    muted "Cancelled"

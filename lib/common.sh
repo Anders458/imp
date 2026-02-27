@@ -323,6 +323,25 @@ get_diff() {
 
 # === Validation ===
 
+# Validate Conventional Commits format
+# Returns 0 if valid, 1 if invalid
+validate_commit() {
+   local msg="$1"
+   local subject
+
+   subject=$(echo "$msg" | head -1)
+
+   if [[ ! "$subject" =~ ^(feat|fix|refactor|build|chore|docs|test|style|perf|ci)(\(.+\))?!?:\ .+ ]]; then
+      return 1
+   fi
+
+   # Description after "type: " must start lowercase (tickets like IMP-123 are exempt)
+   local desc="${subject#*: }"
+   if [[ "$desc" =~ ^[A-Z] ]] && [[ ! "$desc" =~ ^[A-Z]+-[0-9] ]]; then
+      return 1
+   fi
+}
+
 # Validate branch name contains only safe characters
 validate_branch() {
    local name="$1"
@@ -331,6 +350,49 @@ validate_branch() {
       err "Invalid branch name: $name"
       exit 1
    fi
+}
+
+# === Changelog ===
+
+# Generate changelog entry from conventional commit subjects
+# Reads subjects from stdin, one per line
+# Groups by type: feat→Added, fix→Fixed, others→Changed
+changelog_from_commits() {
+   local added="" fixed="" changed=""
+   local line type desc
+
+   while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+
+      # Strip leading hash from oneline format (e.g. "abc1234 feat: ...")
+      if [[ "$line" =~ ^[0-9a-f]+\  ]]; then
+         line="${line#* }"
+      fi
+
+      # Extract type and description from conventional commit
+      if [[ "$line" =~ ^(feat|fix|refactor|build|chore|docs|test|style|perf|ci)(\(.+\))?!?:\ (.+)$ ]]; then
+         type="${BASH_REMATCH[1]}"
+         desc="${BASH_REMATCH[3]}"
+      else
+         # Non-conventional commit, include as Changed
+         changed+="- Changed: $line"$'\n'
+         continue
+      fi
+
+      case "$type" in
+         feat) added+="- Added: $desc"$'\n' ;;
+         fix) fixed+="- Fixed: $desc"$'\n' ;;
+         *) changed+="- Changed: $desc"$'\n' ;;
+      esac
+   done
+
+   # Output non-empty sections in order
+   [[ -n "$added" ]] && printf '%s' "$added"
+   [[ -n "$changed" ]] && printf '%s' "$changed"
+   [[ -n "$fixed" ]] && printf '%s' "$fixed"
+
+   # Return failure if nothing was generated
+   [[ -n "$added$changed$fixed" ]]
 }
 
 # === Semver ===
@@ -368,23 +430,25 @@ sanitize() {
 
 # Render markdown to ANSI (glow > gum > sed fallback)
 md() {
-   local input
+   local input output
 
    input=$(cat)
    input=$(echo "$input" | sed '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')
 
    if command -v glow &> /dev/null; then
-      echo "$input" | glow -s dark -w 80 -
+      output=$(echo "$input" | glow -s dark -w 80 -)
    elif [[ "$HAS_GUM" == "true" ]]; then
-      echo "$input" | gum format -t markdown
+      output=$(echo "$input" | gum format -t markdown)
    else
-      echo "$input" \
+      output=$(echo "$input" \
          | sed -E "s/^### (.*)$/$(printf '\033[1;36m')\\1$(printf '\033[0m')/" \
          | sed -E "s/^## (.*)$/$(printf '\033[1;33m')\\1$(printf '\033[0m')/" \
          | sed -E "s/^# (.*)$/$(printf '\033[1;35m')\\1$(printf '\033[0m')/" \
          | sed -E "s/\*\*([^*]+)\*\*/$(printf '\033[1m')\\1$(printf '\033[0m')/g" \
          | sed -E "s/\*([^*]+)\*/$(printf '\033[3m')\\1$(printf '\033[0m')/g" \
          | sed -E "s/\`([^\`]+)\`/$(printf '\033[36m')\\1$(printf '\033[0m')/g" \
-         | sed -E "s/^- /  • /"
+         | sed -E "s/^- /  • /")
    fi
+
+   echo "$output" | sed '/./,$!d' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
 }

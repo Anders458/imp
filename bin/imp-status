@@ -12,10 +12,10 @@ tag=$(last_tag)
 header "$repo"
 
 label "Branch"
-echo "  $branch"
+item "$branch"
 echo
 
-changes=$(git status --short -uall)
+changes=$(git status --short)
 if [[ -n "$changes" ]]; then
    # Batch numstats into a newline-delimited lookup string (Bash 3.2 compatible)
    numstats=""
@@ -70,8 +70,8 @@ wt_count=$(echo "$worktrees" | wc -l | tr -d ' ')
 if [[ $wt_count -gt 1 ]]; then
    label "Worktrees"
    echo "$worktrees" | while read -r line; do
-      if echo "$line" | grep -q "$(pwd)"; then
-         echo "  $line (here)"
+      if [[ "$line" == "$(pwd) "* ]]; then
+         item "$line (here)"
       else
          item "$line"
       fi

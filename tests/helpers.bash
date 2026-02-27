@@ -12,6 +12,7 @@ setup_test_repo() {
    git init -b main
    git config user.email "test@test.com"
    git config user.name "Test"
+   echo ".bin" >> .git/info/exclude
    echo "hello" > file.txt
    git add file.txt
    git commit -m "Initial commit"

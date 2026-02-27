@@ -17,7 +17,7 @@ if ! has_upstream; then
 fi
 
 label "Branch"
-echo "  $branch"
+item "$branch"
 echo
 
 spin "Fetching..." git fetch
@@ -32,12 +32,12 @@ fi
 
 if [[ "$behind" -gt 0 ]]; then
    label "Behind"
-   echo "  $behind commits"
+   item "$behind commits"
 fi
 
 if [[ "$ahead" -gt 0 ]]; then
    label "Ahead"
-   echo "  $ahead commits"
+   item "$ahead commits"
 fi
 
 echo

@@ -32,7 +32,7 @@ issue_title=$(echo "$issue_data" | jq -r '.title')
 issue_body=$(echo "$issue_data" | jq -r '.body' | head -20)
 
 label "Issue"
-echo "  #$issue: $issue_title"
+item "#$issue: $issue_title"
 echo
 
 branch_name=$(spin "Generating branch name..." ai_fast "$(prompt_fix "$issue_title" "$issue_body")")
@@ -42,7 +42,7 @@ branch_name=$(echo "$branch_name" | sanitize)
 validate_branch "$branch_name"
 
 label "Branch"
-echo "  $branch_name"
+item "$branch_name"
 echo
 
 if confirm "Create branch?"; then

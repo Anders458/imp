@@ -9,6 +9,7 @@ header "Review"
 
 if ! get_diff; then
    muted "No changes to review"
+   hint "make some changes first"
    exit 0
 fi
 

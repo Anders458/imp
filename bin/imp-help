@@ -14,17 +14,17 @@ echo
 
 echo -e "${BOLD}Starting a feature${RESET}"
 echo -e "  imp branch \"add auth\"                     ${MUTED}# create branch from description${RESET}"
+echo -e "  imp branch                                ${MUTED}# switch between branches${RESET}"
 echo -e "  imp fix 42                                ${MUTED}# or from a GitHub issue${RESET}"
 echo
 
 echo -e "${BOLD}While working${RESET}"
-echo -e "  imp diff                                  ${MUTED}# explain changes in English${RESET}"
 echo -e "  imp review                                ${MUTED}# AI code review${RESET}"
 echo -e "  imp commit -a                             ${MUTED}# stage all + AI commit message${RESET}"
+echo -e "  imp split                                 ${MUTED}# group changes into logical commits${RESET}"
 echo -e "  imp amend                                 ${MUTED}# fix last commit${RESET}"
 echo -e "  imp undo [N]                              ${MUTED}# undo last N commits${RESET}"
 echo -e "  imp revert <hash>                         ${MUTED}# safely undo a pushed commit${RESET}"
-echo -e "  imp stash                                 ${MUTED}# save work for later${RESET}"
 echo
 
 echo -e "${BOLD}Staying in sync${RESET}"
@@ -35,11 +35,9 @@ echo
 
 echo -e "${BOLD}Shipping${RESET}"
 echo -e "  imp pr                                    ${MUTED}# create pull request${RESET}"
+echo -e "  imp done                                  ${MUTED}# clean up after PR merge${RESET}"
+echo -e "  imp clean                                 ${MUTED}# delete merged branches${RESET}"
 echo -e "  imp release                               ${MUTED}# squash + changelog + tag + push${RESET}"
-echo
-
-echo -e "${BOLD}New project${RESET}"
-echo -e "  imp init                                  ${MUTED}# initialize repo with .gitignore${RESET}"
 echo
 
 divider
@@ -52,9 +50,9 @@ echo "  imp commit -a  →  imp commit -a  →  imp release"
 echo
 
 echo -e "${MUTED}Feature branch:${RESET}"
-echo "  imp branch  →  imp commit -a  →  imp pr"
+echo "  imp branch  →  imp commit -a  →  imp pr  →  imp done"
 echo
 
 echo -e "${MUTED}Hotfix:${RESET}"
-echo "  imp fix 42  →  imp commit -a  →  imp pr"
+echo "  imp fix 42  →  imp commit -a  →  imp pr  →  imp done"
 echo

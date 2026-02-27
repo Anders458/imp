@@ -10,36 +10,36 @@ RESET='\033[0m'
 
 usage() {
    echo
-   echo -e "${BOLD}imp${RESET} — AI-powered git workflow"
+   echo -e "${BOLD}imp${RESET} v${IMP_VERSION} — AI-powered git workflow"
+   echo
+   echo "Usage: imp <command>"
    echo
    echo -e "${MUTED}Daily workflow${RESET}"
    echo "  commit     Generate commit message (-a to stage all)"
+   echo "  split      Split changes into multiple commits"
    echo "  amend      Amend last commit with new message"
    echo "  undo       Undo last N commits (keeps changes staged)"
    echo "  revert     Safely undo a pushed commit"
-   echo "  stash      Stash changes with AI message"
    echo "  sync       Pull, rebase, push"
    echo
    echo -e "${MUTED}Branching${RESET}"
-   echo "  branch     Create branch from description"
+   echo "  branch     Create or switch branches"
    echo "  fix        Create branch from GitHub issue"
    echo "  pr         Create pull request"
+   echo "  done       Clean up after PR merge"
+   echo "  clean      Delete merged branches"
    echo
    echo -e "${MUTED}Analysis${RESET}"
-   echo "  diff       Explain changes in plain English"
    echo "  review     AI code review of changes"
-   echo "  describe   Explain what a branch does"
    echo "  status     Show repo overview"
    echo "  log        Pretty commit graph"
    echo
    echo -e "${MUTED}Release${RESET}"
    echo "  release    Squash, changelog, tag, and push"
-   echo "  init       Initialize new repository"
    echo
    echo -e "${MUTED}Help${RESET}"
    echo "  help       Show workflow guide"
    echo "  doctor     Check dependencies"
-   echo "  --version  Show version"
    echo
 }
 

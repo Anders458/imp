@@ -11,8 +11,7 @@ ref="${1:-}"
 
 if [[ -z "$ref" ]]; then
    if [[ "$HAS_GUM" == "true" ]]; then
-      # shellcheck disable=SC2046
-      ref=$(gum choose --header "Select commit to revert" $(git log --oneline -10 2> /dev/null))
+      ref=$(git log --oneline -10 2> /dev/null | gum choose --header "Select commit to revert")
       ref="${ref%% *}"
    else
       show_items "Recent commits" "$(git log --oneline -10 2> /dev/null)"
