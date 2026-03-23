@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.16] - 2026-03-23
+
+### Added
+- Warn when releasing from non-base branch
+
 ## [0.0.15] - 2026-03-21
 
 ### Fixed

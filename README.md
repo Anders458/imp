@@ -27,8 +27,17 @@ imp release          # squash, changelog, tag, push
 
 Every command works with or without a network connection (swap Claude for a local Ollama model). No config files, no lock-in: a Python CLI that wraps git.
 
+## Why
+
+Writing good commit messages, branch names, and PR descriptions slows you down without making your code better. And across a team, everyone formats them differently.
+
+imp removes that friction and enforces consistency. Every message follows [Conventional Commits](https://www.conventionalcommits.org/), every branch name is clean, every PR has a real description. Your git history reads the same whether one person wrote it or ten.
+
+No new concepts to learn. No workflow to adopt. It's still git underneath. imp just handles the parts you were going to half-ass anyway.
+
 ## Table of Contents
 
+- [Why](#why)
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Commands](#commands)

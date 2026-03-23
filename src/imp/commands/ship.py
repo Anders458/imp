@@ -26,6 +26,10 @@ def ship (
 
    git.require ()
 
+   base = git.base_branch ()
+   if git.branch () != base:
+      console.warn (f"Releasing from {git.branch ()}, not {base}")
+
    if level not in ("patch", "minor", "major"):
       console.err (f"Invalid level: {level}")
       console.hint ("use patch, minor, or major")

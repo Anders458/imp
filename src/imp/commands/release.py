@@ -118,6 +118,15 @@ def release ():
    """
 
    git.require ()
+
+   base = git.base_branch ()
+   current = git.branch ()
+   if current != base:
+      console.warn (f"Releasing from {current}, not {base}")
+      if not console.confirm ("Continue?"):
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
+
    git.require_clean ("imp commit first")
 
    tag = git.last_tag ()
