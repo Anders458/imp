@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.19] - 2026-03-24
+
+### Changed
+- Refactor workflows section
+
 ## [0.0.18] - 2026-03-24
 
 ### Added

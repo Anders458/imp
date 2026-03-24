@@ -25,8 +25,6 @@ imp review           # AI code review of your changes
 imp release          # squash, changelog, tag, push
 ```
 
-Every command works with or without a network connection (swap Claude for a local Ollama model). No config files, no lock-in: a Python CLI that wraps git.
-
 ## Why
 
 AI agents can run git for you, but they improvise every time. Imp is opinionated: same format, same workflow, same result, every time.
@@ -159,7 +157,7 @@ The hint is injected as context before the AI's format rules, so the output stil
 
 ## Commit Format
 
-imp generates [Conventional Commits](https://www.conventionalcommits.org/) messages. All commit messages are validated before use.
+Imp generates [Conventional Commits](https://www.conventionalcommits.org/) messages. All commit messages are validated before use.
 
 **Format:**
 
@@ -189,23 +187,11 @@ type!: message              # breaking change
 
 ## Workflows
 
-**Solo (trunk-based):**
-
-```
-imp commit -a  ->  imp commit -a  ->  imp release
-```
-
-**Feature branch:**
-
-```
-imp branch  ->  imp commit -a  ->  imp pr  ->  imp done
-```
-
-**Hotfix:**
-
-```
-imp fix 42  ->  imp commit -a  ->  imp pr  ->  imp done
-```
+| Flow | Steps |
+|---|---|
+| **Solo** | `commit -a` → `commit -a` → `release` |
+| **Feature branch** | `branch` → `commit -a` → `pr` → `done` |
+| **Hotfix** | `fix 42` → `commit -a` → `pr` → `done` |
 
 ## Configuration
 
