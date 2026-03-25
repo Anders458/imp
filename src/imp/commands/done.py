@@ -74,7 +74,7 @@ def done (
 
       if not git.merge (feature, no_ff=True):
          console.err ("Merge conflict")
-         console.hint ("resolve conflicts, then: git merge --continue")
+         console.hint ("imp resolve to fix conflicts")
          raise typer.Exit (1)
 
       console.success (f"Merged {feature} into {base}")

@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.20] - 2026-03-24
+
+### Added
+- Add resolve command for ai-assisted conflict resolution
+
 ## [0.0.19] - 2026-03-24
 
 ### Changed

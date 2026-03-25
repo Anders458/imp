@@ -145,3 +145,24 @@ File diffs:
 {file_diffs}
 
 Output ONLY the JSON array:"""
+
+
+def resolve (content: str, path: str, ours: str, theirs: str, whisper: str = "") -> str:
+   return f"""\
+Resolve all merge conflicts in this file.
+{_whisper (whisper)}\
+Branches:
+- Ours (current): {ours}
+- Theirs (incoming): {theirs}
+
+File: {path}
+
+Rules:
+- Resolve every conflict marked by <<<<<<<, =======, >>>>>>>
+- Preserve all non-conflicted code exactly as-is
+- Output the complete resolved file, nothing else
+- No explanation, no markdown fences, no commentary
+
+{content}
+
+Output ONLY the resolved file:"""

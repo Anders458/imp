@@ -106,6 +106,7 @@ imp release
 | `imp undo [N]` | Undo last N commits, keep changes staged. |
 | `imp revert [hash]` | Safely revert a pushed commit. |
 | `imp sync` | Pull, rebase, push in one step. |
+| `imp resolve` | AI-assisted merge conflict resolution. |
 
 ### Branching
 
@@ -192,6 +193,7 @@ type!: message              # breaking change
 | **Solo** | `commit -a` → `commit -a` → `release` |
 | **Feature branch** | `branch` → `commit -a` → `pr` → `done` |
 | **Hotfix** | `fix 42` → `commit -a` → `pr` → `done` |
+| **Merge conflict** | `sync` or `done` → `resolve` → continue |
 
 ## Configuration
 

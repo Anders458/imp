@@ -50,7 +50,7 @@ def sync ():
       console.muted ("Rebasing...")
       if not git.rebase ():
          console.err ("Rebase failed")
-         console.hint ("git rebase --abort to cancel")
+         console.hint ("imp resolve to fix conflicts, or git rebase --abort")
          raise typer.Exit (1)
       console.success ("Rebased")
 

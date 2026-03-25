@@ -35,6 +35,7 @@ def help ():
 
    console.out.print ("[bold]Staying in sync[/bold]")
    console.out.print ("  imp sync                                  [muted]# pull, rebase, push[/muted]")
+   console.out.print ("  imp resolve                               [muted]# AI merge conflict resolution[/muted]")
    console.out.print ("  imp status                                [muted]# repo overview[/muted]")
    console.out.print ("  imp log                                   [muted]# pretty commit graph[/muted]")
    console.out.print ()

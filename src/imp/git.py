@@ -372,6 +372,35 @@ def rev_parse_short (ref: str) -> str:
    return result.stdout.strip ()
 
 
+def conflicts () -> list [str]:
+   result = _run ("diff", "--name-only", "--diff-filter=U", check=False)
+   lines = result.stdout.strip ().splitlines ()
+   return [ line.strip () for line in lines if line.strip () ]
+
+
+def conflict_content (path: str) -> str:
+   from pathlib import Path
+
+   return Path (path).read_text ()
+
+
+def merge_in_progress () -> bool:
+   from pathlib import Path
+
+   git_dir = _run ("rev-parse", "--git-dir", check=False).stdout.strip ()
+   return Path (git_dir, "MERGE_HEAD").exists ()
+
+
+def rebase_in_progress () -> bool:
+   from pathlib import Path
+
+   git_dir = _run ("rev-parse", "--git-dir", check=False).stdout.strip ()
+   return (
+      Path (git_dir, "rebase-merge").exists ()
+      or Path (git_dir, "rebase-apply").exists ()
+   )
+
+
 def branch_age (name: str) -> str:
    result = _run ("log", "-1", "--format=%cr", name, check=False)
    return result.stdout.strip () or "unknown"

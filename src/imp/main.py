@@ -14,6 +14,7 @@ from imp.commands.help import help
 from imp.commands.log import log
 from imp.commands.pr import pr
 from imp.commands.release import release
+from imp.commands.resolve import resolve
 from imp.commands.revert import revert
 from imp.commands.review import review
 from imp.commands.ship import ship
@@ -61,6 +62,7 @@ app.command () (help)
 app.command () (log)
 app.command () (pr)
 app.command () (release)
+app.command () (resolve)
 app.command () (revert)
 app.command () (review)
 app.command () (ship)
