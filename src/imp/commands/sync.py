@@ -3,7 +3,9 @@ import typer
 from imp import console, git
 
 
-def sync ():
+def sync (
+   yes: bool = typer.Option (False, "--yes", "-y", help="Push without confirmation"),
+):
    """Pull, rebase, and push current branch.
 
    Fetches from origin, rebases local commits on top of upstream changes,
@@ -55,7 +57,7 @@ def sync ():
       console.success ("Rebased")
 
    if ahead > 0 or behind > 0:
-      if console.confirm ("Push?"):
+      if yes or console.confirm ("Push?"):
          git.push ()
          console.success ("Pushed")
 

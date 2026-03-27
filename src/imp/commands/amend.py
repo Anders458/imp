@@ -4,6 +4,7 @@ from imp import ai, console, git, prompts
 
 
 def amend (
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept AI message without review"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Amend last commit with a new AI-generated message.
@@ -45,19 +46,23 @@ def amend (
 
    git.stage (all=True)
 
-   choice = console.review (msg)
-
-   if choice == "Edit":
-      msg = console.edit (msg)
-      if not msg.strip ():
-         console.muted ("Empty message, cancelled")
-         raise typer.Exit (0)
-      git.commit (msg, amend=True)
-   elif choice == "Yes":
+   if yes:
+      console.item (msg)
       git.commit (msg, amend=True)
    else:
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
+      choice = console.review (msg)
+
+      if choice == "Edit":
+         msg = console.edit (msg)
+         if not msg.strip ():
+            console.muted ("Empty message, cancelled")
+            raise typer.Exit (0)
+         git.commit (msg, amend=True)
+      elif choice == "Yes":
+         git.commit (msg, amend=True)
+      else:
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
 
    console.success ("Amended")
    console.hint ("imp commit again, or imp release when ready")

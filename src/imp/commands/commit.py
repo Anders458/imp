@@ -9,6 +9,7 @@ from imp import ai, console, git, prompts
 def commit (
    all: bool = typer.Option (False, "--all", "-a", help="Stage all changes first"),
    exclude: Optional [list [str]] = typer.Option (None, "--exclude", "-E", help="Glob patterns to exclude from staging"),
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept AI message without review"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Generate an AI commit message for staged changes.
@@ -44,19 +45,23 @@ def commit (
    b = git.branch ()
    msg = ai.commit_message (prompts.commit (d, b, whisper))
 
-   choice = console.review (msg)
-
-   if choice == "Edit":
-      msg = console.edit (msg)
-      if not msg.strip ():
-         console.muted ("Empty message, cancelled")
-         raise typer.Exit (0)
-      git.commit (msg)
-   elif choice == "Yes":
+   if yes:
+      console.item (msg)
       git.commit (msg)
    else:
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
+      choice = console.review (msg)
+
+      if choice == "Edit":
+         msg = console.edit (msg)
+         if not msg.strip ():
+            console.muted ("Empty message, cancelled")
+            raise typer.Exit (0)
+         git.commit (msg)
+      elif choice == "Yes":
+         git.commit (msg)
+      else:
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
 
    console.success ("Committed")
    console.hint ("imp commit again, or imp release when ready")

@@ -5,6 +5,7 @@ from imp import console, git
 
 def done (
    target: str | None = typer.Argument (None, help="Branch to merge into"),
+   yes: bool = typer.Option (False, "--yes", "-y", help="Skip confirmation"),
 ):
    """Merge feature branch into target, then clean up.
 
@@ -59,7 +60,7 @@ def done (
 
    console.out.print ()
 
-   if not console.confirm ("Proceed?"):
+   if not yes and not console.confirm ("Proceed?"):
       console.muted ("Cancelled")
       raise typer.Exit (0)
 

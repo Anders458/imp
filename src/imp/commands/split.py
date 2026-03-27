@@ -68,6 +68,7 @@ def _validate_response (response: str, all_files: list [str]) -> list [dict] | N
 
 
 def split (
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept AI grouping without review"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Group dirty files into logical commits via AI.
@@ -131,7 +132,7 @@ def split (
          console.item (f)
       console.out.print ()
 
-   if not console.confirm (f"Commit {len (groups)} groups?"):
+   if not yes and not console.confirm (f"Commit {len (groups)} groups?"):
       console.muted ("Cancelled")
       raise typer.Exit (0)
 

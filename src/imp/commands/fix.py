@@ -9,6 +9,7 @@ from imp import ai, console, git, prompts, validate
 
 def fix (
    issue: int = typer.Argument (..., help="GitHub issue number"),
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept suggested branch name"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Create a branch from a GitHub issue.
@@ -59,7 +60,7 @@ def fix (
    console.item (name)
    console.out.print ()
 
-   if console.confirm ("Create branch?"):
+   if yes or console.confirm ("Create branch?"):
       git.checkout (name, create=True)
       console.success (f"Switched to {name}")
       console.out.print ()

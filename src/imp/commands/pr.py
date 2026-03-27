@@ -22,6 +22,7 @@ def _parse_response (content: str) -> tuple [str, str]:
 
 
 def pr (
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept AI description without review"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Create a GitHub pull request with AI-generated description.
@@ -85,16 +86,17 @@ def pr (
    console.divider ()
    console.out.print ()
 
-   choice = console.choose ("Create PR?", [ "Yes", "Edit", "No" ])
+   if not yes:
+      choice = console.choose ("Create PR?", [ "Yes", "Edit", "No" ])
 
-   if choice == "Edit":
-      edited = console.edit (f"{title}\n\n{description}")
-      lines = edited.splitlines ()
-      title = lines [0] if lines else title
-      description = "\n".join (lines [2:]) if len (lines) > 2 else description
-   elif choice == "No":
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
+      if choice == "Edit":
+         edited = console.edit (f"{title}\n\n{description}")
+         lines = edited.splitlines ()
+         title = lines [0] if lines else title
+         description = "\n".join (lines [2:]) if len (lines) > 2 else description
+      elif choice == "No":
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
 
    if not git.has_upstream ():
       console.spin ("Pushing to origin...", git.push, False, True, b)

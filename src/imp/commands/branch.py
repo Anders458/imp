@@ -5,6 +5,7 @@ from imp import ai, console, git, prompts, validate
 
 def branch (
    description: list [str] | None = typer.Argument (None, help="Branch description"),
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept suggested branch name"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Create or switch branches. No args: interactive picker.
@@ -19,7 +20,7 @@ def branch (
    if not description:
       _switch ()
    else:
-      _create (" ".join (description), whisper)
+      _create (" ".join (description), whisper, yes)
 
 
 def _switch ():
@@ -48,7 +49,7 @@ def _switch ():
    console.success (f"Switched to {target}")
 
 
-def _create (desc: str, whisper: str = ""):
+def _create (desc: str, whisper: str = "", yes: bool = False):
    console.header ("Branch")
 
    name = ai.fast (prompts.branch_name (desc, whisper))
@@ -62,7 +63,7 @@ def _create (desc: str, whisper: str = ""):
    console.item (name)
    console.out.print ()
 
-   if console.confirm ("Create branch?"):
+   if yes or console.confirm ("Create branch?"):
       git.checkout (name, create=True)
       console.success (f"Switched to {name}")
       console.hint ("make changes, then imp commit")
