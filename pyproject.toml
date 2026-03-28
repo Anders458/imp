@@ -3,7 +3,7 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "imp"
+name = "imp-git"
 dynamic = ["version"]
 description = "AI-powered git workflow CLI"
 readme = "README.md"
