@@ -24,6 +24,9 @@ dev = [
 [project.scripts]
 imp = "imp.main:app"
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/imp"]
+
 [tool.hatch.version]
 source = "vcs"
 tag-pattern = "v(?P<version>.*)"
