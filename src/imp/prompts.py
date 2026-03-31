@@ -166,3 +166,22 @@ Rules:
 {content}
 
 Output ONLY the resolved file:"""
+
+
+def changelog_infer (subjects: str) -> str:
+   return f"""\
+Group these git commit subjects into logical version releases.
+These commits have no git tags, so infer where version boundaries should be.
+
+Rules:
+- Output a JSON array, no markdown fences, no explanation
+- Each element: {{"version": "0.0.X", "commits": ["subject1", "subject2"]}}
+- Start numbering from 0.0.1 unless told otherwise
+- Group by logical release boundaries (look for "release" commits, large feature batches, or natural breakpoints)
+- Every commit must appear in exactly one group
+- Order chronologically (earliest version first)
+
+Commits (oldest first):
+{subjects}
+
+Output ONLY the JSON array:"""

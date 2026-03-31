@@ -75,3 +75,60 @@ class TestBaseBranch:
          capture_output=True,
       )
       assert git.base_branch () == "master"
+
+
+class TestTagCommitMap:
+
+   def test_returns_dict (self, repo):
+      result = git.tag_commit_map ()
+      assert isinstance (result, dict)
+
+   def test_maps_tag_to_commit (self, repo):
+      head = git.rev_parse ("HEAD")
+      git.tag ("v1.0.0")
+      result = git.tag_commit_map ()
+      assert result ["v1.0.0"] == head
+
+
+class TestLogFull:
+
+   def test_returns_list (self, repo):
+      result = git.log_full ()
+      assert isinstance (result, list)
+      assert len (result) >= 1
+
+   def test_entry_has_fields (self, repo):
+      result = git.log_full ()
+      entry = result [0]
+      assert "hash" in entry
+      assert "subject" in entry
+      assert "date" in entry
+
+   def test_respects_since_hash (self, repo):
+      subprocess.run ([ "git", "commit", "--allow-empty", "-m", "feat: second" ], check=True)
+      first = git.log_full () [0] ["hash"]
+      result = git.log_full (since=first)
+      hashes = [ e ["hash"] for e in result ]
+      assert first not in hashes
+
+
+class TestTagWithRef:
+
+   def test_tags_specific_commit (self, repo):
+      subprocess.run ([ "git", "commit", "--allow-empty", "-m", "feat: second" ], check=True)
+      first = git.log_full () [0] ["hash"]
+      git.tag ("v1.0.0", ref=first)
+      assert git.tag_exists ("v1.0.0")
+      result = git.tag_commit_map ()
+      assert result ["v1.0.0"] == first
+
+
+class TestLogAfterDate:
+
+   def test_returns_commit_after_date (self, repo):
+      result = git.log_after_date ("2000-01-01")
+      assert result != ""
+
+   def test_returns_empty_for_future_date (self, repo):
+      result = git.log_after_date ("2099-01-01")
+      assert result == ""

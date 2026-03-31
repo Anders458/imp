@@ -37,13 +37,13 @@ AI agents can run git for you, but they improvise every time. Imp is opinionated
 ## Install
 
 ```bash
-uv tool install git+https://github.com/anders458/imp.git
+pip install imp-git
 ```
 
-Or with pip:
+Or with uv:
 
 ```bash
-pip install git+https://github.com/anders458/imp.git
+uv tool install imp-git
 ```
 
 Then set up your AI provider and verify:

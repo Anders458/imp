@@ -111,3 +111,11 @@ class TestSplit:
    def test_ticket_extraction (self):
       result = prompts.split ("diffs", "feat/IMP-123-work")
       assert "IMP-123" in result
+
+
+class TestChangelogInfer:
+
+   def test_changelog_infer (self):
+      result = prompts.changelog_infer ("feat: init\nfix: bug\nchore: release")
+      assert "group" in result.lower () or "version" in result.lower ()
+      assert "feat: init" in result

@@ -4,6 +4,7 @@ from rich.console import Console
 from imp import __version__
 from imp.commands.amend import amend
 from imp.commands.branch import branch
+from imp.commands.changelog import changelog
 from imp.commands.clean import clean
 from imp.commands.commit import commit
 from imp.commands.config import configure
@@ -53,6 +54,7 @@ def main (
 
 app.command () (amend)
 app.command () (branch)
+app.command () (changelog)
 app.command () (clean)
 app.command () (commit)
 app.command ("config") (configure)

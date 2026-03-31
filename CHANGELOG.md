@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.27] - 2026-03-30
+
+### Added
+- Add imp changelog command
+- Add tag remediation plan builder
+- Add changelog generation from version map
+- Add AI-based version boundary inference
+- Add AI prompt for inferring version boundaries
+- Add version map builder from tags and commits
+- Add --since value parser for changelog command
+- Add tag_commit_map and log_full git helpers
+
+### Changed
+- Update installation instructions to use imp-git
+- Add changelog command integration test
+
+### Fixed
+- Address review issues in changelog implementation
+
 ## [0.0.24] - 2026-03-26
 
 ### Added

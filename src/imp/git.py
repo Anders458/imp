@@ -175,8 +175,11 @@ def highest_tag () -> str:
    return lines [0].strip () if lines and lines [0].strip () else ""
 
 
-def tag (name: str):
-   _run ("tag", name)
+def tag (name: str, ref: str = ""):
+   args = [ "tag", name ]
+   if ref:
+      args.append (ref)
+   _run (*args)
 
 
 def tag_exists (name: str) -> bool:
@@ -426,3 +429,49 @@ def rebase_in_progress () -> bool:
 def branch_age (name: str) -> str:
    result = _run ("log", "-1", "--format=%cr", name, check=False)
    return result.stdout.strip () or "unknown"
+
+
+def log_after_date (date: str) -> str:
+   result = _run ("log", "--format=%H", "--after", date, "--reverse", check=False)
+   lines = result.stdout.strip ().splitlines ()
+   return lines [0].strip () if lines else ""
+
+
+def tag_commit_map () -> dict [str, str]:
+   # %(*objectname) dereferences annotated tags to the commit hash;
+   # for lightweight tags it's empty, so we fall back to %(objectname)
+   result = _run (
+      "for-each-ref",
+      "--format=%(refname:short) %(*objectname) %(objectname)",
+      "--sort=v:refname",
+      "refs/tags/v*",
+      check=False,
+   )
+   mapping = {}
+   for line in result.stdout.strip ().splitlines ():
+      parts = line.strip ().split ()
+      if len (parts) == 3:
+         # Annotated tag: parts [1] is the dereferenced commit
+         mapping [parts [0]] = parts [1] if parts [1] else parts [2]
+      elif len (parts) == 2:
+         mapping [parts [0]] = parts [1]
+   return mapping
+
+
+def log_full (since: str = "", until: str = "") -> list [dict [str, str]]:
+   args = [ "log", "--format=%H\t%ai\t%s", "--reverse" ]
+   if since and until:
+      args.append (f"{since}..{until}")
+   elif since:
+      args.append (f"{since}..HEAD")
+   result = _run (*args, check=False)
+   entries = []
+   for line in result.stdout.strip ().splitlines ():
+      parts = line.split ("\t", 2)
+      if len (parts) == 3:
+         entries.append ({
+            "hash": parts [0],
+            "subject": parts [2],
+            "date": parts [1].split () [0],
+         })
+   return entries
