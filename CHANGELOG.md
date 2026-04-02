@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.34] - 2026-04-02
+
+### Fixed
+- Normalize status code display
+
 ## [0.0.33] - 2026-04-02
 
 ### Changed
