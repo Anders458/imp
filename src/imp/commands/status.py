@@ -73,7 +73,8 @@ def status ():
             a, r = stats [path]
             stat_str = f" [green]+{a}[/green] [red]-{r}[/red]"
 
-         console.out.print (f"  [{style}]{code.strip ()}[/{style}]  {path}{stat_str}")
+         label = code.strip ().replace ("??", "?")
+         console.out.print (f"  [{style}]{label}[/{style}]  {path}{stat_str}")
       console.out.print ()
 
    if tag:
