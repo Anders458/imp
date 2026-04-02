@@ -1,5 +1,9 @@
 import re
 
+from imp.validate import COMMIT_TYPES
+
+_TYPES_STR = ", ".join (COMMIT_TYPES)
+
 
 def _ticket_rule (branch: str) -> str:
    match = re.search (r"([A-Z]+-[0-9]+)", branch)
@@ -21,7 +25,7 @@ def commit (diff: str, branch: str = "", whisper: str = "") -> str:
 Generate a Conventional Commits message for this diff.
 {_whisper (whisper)}\
 Format: type: message
-Types: feat, fix, refactor, build, chore, docs, test, style, perf, ci
+Types: {_TYPES_STR}
 {_ticket_rule (branch)}
 Rules:
 - Subject only, one line, max 72 chars, no period
@@ -36,6 +40,32 @@ Diff:
 {diff}
 
 Output ONLY the commit message, nothing else:"""
+
+
+def gitignore (files: str, existing: str = "") -> str:
+   existing_section = ""
+   if existing:
+      existing_section = f"""
+Existing .gitignore contents (do not duplicate these):
+{existing}
+"""
+
+   return f"""\
+Generate .gitignore entries for this project.
+{existing_section}
+Project files:
+{files}
+
+Rules:
+- Detect the language/framework from the file names
+- Include standard ignore patterns for the detected stack
+- Include OS files (.DS_Store, Thumbs.db)
+- Include editor files (.vscode, .idea)
+- One entry per line, no comments, no blank lines
+- Do not include entries already in the existing .gitignore
+- If nothing new to add, output NONE
+
+Output ONLY the .gitignore entries, nothing else:"""
 
 
 def review (diff: str, whisper: str = "") -> str:
@@ -122,12 +152,19 @@ DESCRIPTION:
 Output ONLY in this format:"""
 
 
-def split (file_diffs: str, branch: str = "", whisper: str = "") -> str:
+def _split_prompt (
+   header: str,
+   content_label: str,
+   content: str,
+   branch: str,
+   whisper: str,
+   extra_rules: str = "",
+) -> str:
    return f"""\
-Group these changed files into logical commits. Each group = one commit.
+{header}
 {_whisper (whisper)}\
 Format: type: message
-Types: feat, fix, refactor, build, chore, docs, test, style, perf, ci
+Types: {_TYPES_STR}
 {_ticket_rule (branch)}
 Rules:
 - Output a JSON array, no markdown fences, no explanation
@@ -138,40 +175,36 @@ Rules:
 - Every file must appear in exactly one group
 - Minimize number of groups (prefer fewer, larger groups)
 - Group by logical change, not by directory
-
+{extra_rules}
 Branch: {branch}
 
-File diffs:
-{file_diffs}
+{content_label}:
+{content}
 
 Output ONLY the JSON array:"""
+
+
+def split (file_diffs: str, branch: str = "", whisper: str = "") -> str:
+   return _split_prompt (
+      "Group these changed files into logical commits. Each group = one commit.",
+      "File diffs",
+      file_diffs,
+      branch,
+      whisper,
+   )
 
 
 def split_plan (file_stats: str, branch: str = "", whisper: str = "") -> str:
    num_files = len (file_stats.splitlines ())
 
-   return f"""\
-Group these {num_files} changed files into logical commits. Each group = one commit.
-{_whisper (whisper)}\
-Format: type: message
-Types: feat, fix, refactor, build, chore, docs, test, style, perf, ci
-{_ticket_rule (branch)}
-Rules:
-- Output a JSON array, no markdown fences, no explanation
-- Each element: {{"files": ["path1", "path2"], "message": "type: description"}}
-- ALL LOWERCASE after the colon (except ticket IDs like IMP-123)
-- Imperative mood: "add" not "added", "fix" not "fixes"
-- Max 72 chars per message, no period at end
-- CRITICAL: every single file below MUST appear in exactly one group. There are {num_files} files; your output must reference all {num_files}
-- Minimize number of groups (prefer fewer, larger groups)
-- Group by logical change, not by directory
-
-Branch: {branch}
-
-File stats (lines added / lines removed / path):
-{file_stats}
-
-Output ONLY the JSON array:"""
+   return _split_prompt (
+      f"Group these {num_files} changed files into logical commits. Each group = one commit.",
+      "File stats (lines added / lines removed / path)",
+      file_stats,
+      branch,
+      whisper,
+      f"- CRITICAL: every single file below MUST appear in exactly one group. There are {num_files} files; your output must reference all {num_files}\n",
+   )
 
 
 def resolve (content: str, path: str, ours: str, theirs: str, whisper: str = "") -> str:

@@ -1,34 +1,23 @@
+import pytest
+
 from imp.version import bump, changelog_from_commits
 
 
 class TestBump:
 
-   def test_patch (self):
-      assert bump ("1.2.3", "patch") == "1.2.4"
-
-   def test_minor (self):
-      assert bump ("1.2.3", "minor") == "1.3.0"
-
-   def test_major (self):
-      assert bump ("1.2.3", "major") == "2.0.0"
-
-   def test_zero (self):
-      assert bump ("0.0.0", "patch") == "0.0.1"
-
-   def test_custom_passthrough (self):
-      assert bump ("1.2.3", "5.0.0") == "5.0.0"
-
-   def test_invalid_version (self):
-      assert bump ("not-a-version", "patch") == "patch"
-
-   def test_large_numbers (self):
-      assert bump ("99.99.99", "patch") == "99.99.100"
-
-   def test_major_resets (self):
-      assert bump ("2.5.8", "major") == "3.0.0"
-
-   def test_minor_resets_patch (self):
-      assert bump ("2.5.8", "minor") == "2.6.0"
+   @pytest.mark.parametrize ("current, level, expected", [
+      ("1.2.3", "patch", "1.2.4"),
+      ("1.2.3", "minor", "1.3.0"),
+      ("1.2.3", "major", "2.0.0"),
+      ("0.0.0", "patch", "0.0.1"),
+      ("1.2.3", "5.0.0", "5.0.0"),
+      ("not-a-version", "patch", "patch"),
+      ("99.99.99", "patch", "99.99.100"),
+      ("2.5.8", "major", "3.0.0"),
+      ("2.5.8", "minor", "2.6.0"),
+   ])
+   def test_bump (self, current, level, expected):
+      assert bump (current, level) == expected
 
 
 class TestChangelogFromCommits:

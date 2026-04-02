@@ -31,10 +31,7 @@ def _switch ():
       console.muted ("Only one branch exists")
       raise typer.Exit (0)
 
-   labels = []
-   for b in branches:
-      age = git.branch_age (b)
-      labels.append (f"{b}  ({age})")
+   labels = [ f"{b}  ({git.branch_age (b)})" for b in branches ]
 
    choice = console.choose ("Switch to:", labels)
    target = choice.split ("  (") [0]
@@ -56,8 +53,7 @@ def _create (desc: str, whisper: str = "", yes: bool = False):
    name = ai.oneline (name)
 
    if not validate.branch (name):
-      console.err (f"Invalid branch name: {name}")
-      raise typer.Exit (1)
+      console.fatal (f"Invalid branch name: {name}")
 
    console.label ("Suggested")
    console.item (name)

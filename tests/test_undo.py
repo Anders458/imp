@@ -4,16 +4,13 @@ import pytest
 
 from imp import git
 
+from tests.conftest import commit_file
+
 
 class TestUndoIntegration:
 
    def test_soft_reset_preserves_changes (self, repo):
-      (repo / "file.txt").write_text ("second\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
-      subprocess.run (
-         [ "git", "commit", "-m", "feat: second change" ],
-         cwd=repo, check=True, capture_output=True,
-      )
+      commit_file (repo, "file.txt", "second\n", "feat: second change")
       assert git.commit_count () == 2
 
       git.reset ("HEAD~1", soft=True)
@@ -24,12 +21,7 @@ class TestUndoIntegration:
 
    def test_undo_multiple (self, repo):
       for i in range (3):
-         (repo / "file.txt").write_text (f"change {i}\n")
-         subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
-         subprocess.run (
-            [ "git", "commit", "-m", f"feat: change {i}" ],
-            cwd=repo, check=True, capture_output=True,
-         )
+         commit_file (repo, "file.txt", f"change {i}\n", f"feat: change {i}")
 
       assert git.commit_count () == 4
       git.reset ("HEAD~3", soft=True)

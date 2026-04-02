@@ -1,4 +1,6 @@
+import os
 import subprocess
+from pathlib import Path
 
 import pytest
 import typer
@@ -8,6 +10,9 @@ from imp.commands import branch as branch_cmd
 from imp.commands import commit as commit_cmd
 from imp.commands import push as push_mod
 from imp.commands import review as review_cmd
+from imp.commands import setup as setup_cmd
+
+from tests.conftest import commit_file, git_run, last_commit_subject
 
 
 class TestCommitCommand:
@@ -17,15 +22,11 @@ class TestCommitCommand:
       monkeypatch.setattr (console, "review", lambda text: "Yes")
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
       commit_cmd.commit (all=False, exclude=None, yes=False, push=False, whisper="")
 
-      result = subprocess.run (
-         [ "git", "log", "-1", "--format=%s" ],
-         cwd=repo, capture_output=True, text=True,
-      )
-      assert result.stdout.strip () == "feat: add login"
+      assert last_commit_subject (repo) == "feat: add login"
 
    def test_commit_all_stages_everything (self, repo, monkeypatch):
       monkeypatch.setattr (ai, "fast", lambda prompt: "feat: add feature")
@@ -35,18 +36,14 @@ class TestCommitCommand:
 
       commit_cmd.commit (all=True, exclude=None, yes=False, push=False, whisper="")
 
-      result = subprocess.run (
-         [ "git", "log", "-1", "--format=%s" ],
-         cwd=repo, capture_output=True, text=True,
-      )
-      assert result.stdout.strip () == "feat: add feature"
+      assert last_commit_subject (repo) == "feat: add feature"
 
    def test_commit_cancelled (self, repo, monkeypatch):
       monkeypatch.setattr (ai, "fast", lambda prompt: "feat: add login")
       monkeypatch.setattr (console, "review", lambda text: "No")
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
       with pytest.raises (typer.Exit):
          commit_cmd.commit (all=False, exclude=None, yes=False, push=False, whisper="")
@@ -65,7 +62,7 @@ class TestCommitCommand:
       monkeypatch.setattr (push_mod, "do_push", lambda: pushed.append (True))
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
       commit_cmd.commit (all=False, exclude=None, yes=False, push=True, whisper="")
 
@@ -79,7 +76,7 @@ class TestCommitCommand:
       monkeypatch.setattr (push_mod, "do_push", lambda: pushed.append (True))
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
       with pytest.raises (typer.Exit):
          commit_cmd.commit (all=False, exclude=None, yes=False, push=True, whisper="")
@@ -94,7 +91,7 @@ class TestCommitCommand:
       monkeypatch.setattr (push_mod, "do_push", lambda: pushed.append (True))
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
       commit_cmd.commit (all=False, exclude=None, yes=False, push=False, whisper="")
 
@@ -113,15 +110,11 @@ class TestCommitCommand:
       monkeypatch.setattr (console, "review", lambda text: "Yes")
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
       commit_cmd.commit (all=False, exclude=None, yes=False, push=False, whisper="")
 
-      result = subprocess.run (
-         [ "git", "log", "-1", "--format=%s" ],
-         cwd=repo, capture_output=True, text=True,
-      )
-      assert result.stdout.strip () == "fix: resolve bug"
+      assert last_commit_subject (repo) == "fix: resolve bug"
       assert len (calls) == 2
 
 
@@ -153,30 +146,43 @@ class TestBranchCommand:
 
 class TestReviewCommand:
 
-   def test_reviews_staged_changes (self, repo, monkeypatch):
+   def test_reviews_staged_changes (self, repo, monkeypatch, mock_spin):
       captured = {}
 
-      def mock_smart (prompt):
+      def mock_smart (prompt, spin=True):
          captured ["prompt"] = prompt
          return "Code looks good. No issues found."
 
       monkeypatch.setattr (ai, "smart", mock_smart)
-      monkeypatch.setattr (
-         console, "spin",
-         lambda title, fn, *args: fn (*args),
-      )
 
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "." ], cwd=repo, check=True)
+      git_run (repo, "add", ".")
 
-      review_cmd.review ()
+      review_cmd.review (last=0, whisper="")
 
       assert "prompt" in captured
       assert "changed" in captured ["prompt"]
 
+   def test_reviews_last_n_commits (self, repo, monkeypatch, mock_spin):
+      captured = {}
+
+      def mock_smart (prompt, spin=True):
+         captured ["prompt"] = prompt
+         return "Code looks good. No issues found."
+
+      monkeypatch.setattr (ai, "smart", mock_smart)
+
+      commit_file (repo, "file.txt", "first\n", "first")
+      commit_file (repo, "file.txt", "second\n", "second")
+
+      review_cmd.review (last=2, whisper="")
+
+      assert "prompt" in captured
+      assert "second" in captured ["prompt"]
+
    def test_review_no_changes (self, repo):
       with pytest.raises (typer.Exit):
-         review_cmd.review ()
+         review_cmd.review (last=0, whisper="")
 
 
 class TestStatusParsing:
@@ -204,6 +210,59 @@ class TestStatusParsing:
          if len (line) < 4:
             continue
          path = line [2:].lstrip (" ")
-         if "spaced.txt" in path:
+         if "spaced" in path:
             found = True
       assert found, "File with leading spaces not found in status"
+
+
+class TestSetupCommand:
+
+   @pytest.fixture
+   def bare_dir (self, tmp_path):
+      old_cwd = Path.cwd ()
+      os.chdir (tmp_path)
+      yield tmp_path
+      os.chdir (old_cwd)
+
+   def test_initializes_repo_and_remote (self, bare_dir, monkeypatch, mock_spin):
+      monkeypatch.setattr (ai, "fast", lambda prompt, spin=True: "node_modules\n.env\n")
+
+      (bare_dir / "package.json").write_text ("{}\n")
+
+      setup_cmd.setup (url="https://github.com/test/repo.git")
+
+      assert (bare_dir / ".git").is_dir ()
+      result = git_run (bare_dir, "remote", "get-url", "origin")
+      assert result.stdout.strip () == "https://github.com/test/repo.git"
+      assert (bare_dir / ".gitignore").exists ()
+      contents = (bare_dir / ".gitignore").read_text ()
+      assert "node_modules" in contents
+
+   def test_skips_init_if_already_repo (self, repo, monkeypatch, mock_spin):
+      monkeypatch.setattr (ai, "fast", lambda prompt, spin=True: ".env\n")
+
+      setup_cmd.setup (url="https://github.com/test/repo.git")
+
+      result = git_run (repo, "remote", "get-url", "origin")
+      assert result.stdout.strip () == "https://github.com/test/repo.git"
+
+   def test_merges_existing_gitignore (self, bare_dir, monkeypatch, mock_spin):
+      monkeypatch.setattr (ai, "fast", lambda prompt, spin=True: "dist\n")
+
+      (bare_dir / ".gitignore").write_text ("node_modules\n")
+      (bare_dir / "index.js").write_text ("//\n")
+
+      setup_cmd.setup (url="https://github.com/test/repo.git")
+
+      contents = (bare_dir / ".gitignore").read_text ()
+      assert "node_modules" in contents
+      assert "dist" in contents
+
+   def test_no_gitignore_changes_when_none_needed (self, bare_dir, monkeypatch, mock_spin):
+      monkeypatch.setattr (ai, "fast", lambda prompt, spin=True: "NONE")
+
+      (bare_dir / "file.txt").write_text ("hello\n")
+
+      setup_cmd.setup (url="https://github.com/test/repo.git")
+
+      assert not (bare_dir / ".gitignore").exists ()

@@ -1,7 +1,14 @@
 import re
 
+COMMIT_TYPES = (
+   "feat", "fix", "refactor", "build", "chore",
+   "docs", "test", "style", "perf", "ci",
+)
+
+TYPES_PATTERN = "|".join (COMMIT_TYPES)
+
 _COMMIT_RE = re.compile (
-   r"^(feat|fix|refactor|build|chore|docs|test|style|perf|ci)"
+   rf"^({TYPES_PATTERN})"
    r"(\(.+\))?!?: .+"
 )
 

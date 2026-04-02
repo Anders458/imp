@@ -108,27 +108,7 @@ def _push_release (ver: str, entry: str, can_squash: bool):
          console.muted ("GitHub release skipped (gh auth or repo issue)")
 
 
-def release ():
-   """Squash, changelog, tag, and push a release.
-
-   Collects commits since the last tag, lets you pick a semver bump,
-   generates a changelog entry, squashes unpushed commits into one, tags
-   the release, and optionally pushes with a GitHub release. Rolls back
-   automatically if anything fails.
-   """
-
-   git.require ()
-
-   base = git.base_branch ()
-   current = git.branch ()
-   if current != base:
-      console.warn (f"Releasing from {current}, not {base}")
-      if not console.confirm ("Continue?"):
-         console.muted ("Cancelled")
-         raise typer.Exit (0)
-
-   git.require_clean ("imp commit first")
-
+def release_scope () -> tuple [str, str, int]:
    tag = git.last_tag ()
 
    log = ""
@@ -143,92 +123,28 @@ def release ():
       console.muted ("No commits to release")
       raise typer.Exit (0)
 
-   count = len (log.splitlines ())
+   return tag, log, len (log.splitlines ())
 
-   console.header ("Release")
 
-   console.items (f"Commits since {tag or 'beginning'}", log)
-
+def current_version () -> str:
    highest = git.highest_tag ()
    current = highest.lstrip ("v") if highest else "0.0.0"
-   if not current:
-      current = "0.0.0"
 
-   patch_ver = version.bump (current, "patch")
-   minor_ver = version.bump (current, "minor")
-   major_ver = version.bump (current, "major")
+   return current or "0.0.0"
 
-   console.muted (f"Current: {current}")
-   console.out.print ()
 
-   choice = console.choose (
-      "Version bump",
-      [
-         f"patch  {patch_ver}",
-         f"minor  {minor_ver}",
-         f"major  {major_ver}",
-         "custom",
-         "quit",
-      ],
-   )
-
-   if choice.startswith ("patch"):
-      new_version = patch_ver
-   elif choice.startswith ("minor"):
-      new_version = minor_ver
-   elif choice.startswith ("major"):
-      new_version = major_ver
-   elif choice == "custom":
-      new_version = console.prompt ("Version:", patch_ver)
-   else:
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
-
-   if git.tag_exists (f"v{new_version}"):
-      console.err (f"Tag v{new_version} already exists")
-      console.hint (f"pick a different version, or: git tag -d v{new_version}")
-      raise typer.Exit (1)
-
+def do_release (
+   new_version: str,
+   tag: str,
+   count: int,
+   will_push: bool = True,
+):
    if tag:
       subjects = git.log_subjects (rev_range=f"{tag}..HEAD")
    else:
       subjects = git.log_subjects (count=count)
 
    entry = version.changelog_from_commits (subjects)
-
-   console.label (f"v{new_version}")
-   console.divider ()
-   console.md (entry)
-   console.divider ()
-   console.out.print ()
-
-   choice = console.choose (
-      f"Release v{new_version}?",
-      [ "Yes", "Edit", "No" ],
-   )
-
-   if choice == "Edit":
-      entry = console.edit (entry)
-      console.out.print ()
-      console.label (f"v{new_version} (edited)")
-      console.divider ()
-      console.md (entry)
-      console.divider ()
-      console.out.print ()
-      if not console.confirm (f"Release v{new_version}?"):
-         console.muted ("Cancelled")
-         raise typer.Exit (0)
-   elif choice == "No":
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
-
-   will_push = console.confirm ("Push after release?")
-
-   if will_push and not git.remote_exists ():
-      console.err ("No remote configured")
-      console.hint ("git remote add origin <url>")
-      raise typer.Exit (1)
-
    summary = f"chore: release v{new_version}"
    today = date.today ().isoformat ()
    new_entry = f"## [{new_version}] - {today}\n\n{entry}"
@@ -269,5 +185,110 @@ def release ():
          msg = getattr (e, "stderr", "") or str (e)
          console.err (f"Push failed: {msg.strip ()}")
          raise typer.Exit (1) from None
+
+
+def release ():
+   """Squash, changelog, tag, and push a release.
+
+   Collects commits since the last tag, lets you pick a semver bump,
+   generates a changelog entry, squashes unpushed commits into one, tags
+   the release, and optionally pushes with a GitHub release. Rolls back
+   automatically if anything fails.
+   """
+
+   git.require ()
+
+   base = git.base_branch ()
+   current = git.branch ()
+   if current != base:
+      console.warn (f"Releasing from {current}, not {base}")
+      if not console.confirm ("Continue?"):
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
+
+   git.require_clean ("imp commit first")
+
+   tag, log, count = release_scope ()
+
+   console.header ("Release")
+
+   console.items (f"Commits since {tag or 'beginning'}", log)
+
+   current = current_version ()
+
+   patch_ver = version.bump (current, "patch")
+   minor_ver = version.bump (current, "minor")
+   major_ver = version.bump (current, "major")
+
+   console.muted (f"Current: {current}")
+   console.out.print ()
+
+   choice = console.choose (
+      "Version bump",
+      [
+         f"patch  {patch_ver}",
+         f"minor  {minor_ver}",
+         f"major  {major_ver}",
+         "custom",
+         "quit",
+      ],
+   )
+
+   if choice.startswith ("patch"):
+      new_version = patch_ver
+   elif choice.startswith ("minor"):
+      new_version = minor_ver
+   elif choice.startswith ("major"):
+      new_version = major_ver
+   elif choice == "custom":
+      new_version = console.prompt ("Version:", patch_ver)
+   else:
+      console.muted ("Cancelled")
+      raise typer.Exit (0)
+
+   if git.tag_exists (f"v{new_version}"):
+      console.hint (f"pick a different version, or: git tag -d v{new_version}")
+      console.fatal (f"Tag v{new_version} already exists")
+
+   if tag:
+      subjects = git.log_subjects (rev_range=f"{tag}..HEAD")
+   else:
+      subjects = git.log_subjects (count=count)
+
+   entry = version.changelog_from_commits (subjects)
+
+   console.label (f"v{new_version}")
+   console.divider ()
+   console.md (entry)
+   console.divider ()
+   console.out.print ()
+
+   choice = console.choose (
+      f"Release v{new_version}?",
+      [ "Yes", "Edit", "No" ],
+   )
+
+   if choice == "Edit":
+      entry = console.edit (entry)
+      console.out.print ()
+      console.label (f"v{new_version} (edited)")
+      console.divider ()
+      console.md (entry)
+      console.divider ()
+      console.out.print ()
+      if not console.confirm (f"Release v{new_version}?"):
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
+   elif choice == "No":
+      console.muted ("Cancelled")
+      raise typer.Exit (0)
+
+   will_push = console.confirm ("Push after release?")
+
+   if will_push and not git.remote_exists ():
+      console.hint ("git remote add origin <url>")
+      console.fatal ("No remote configured")
+
+   do_release (new_version, tag, count, will_push)
 
    console.hint ("make changes, then imp commit")

@@ -1,7 +1,5 @@
 import subprocess
 
-import typer
-
 from imp import console
 
 
@@ -22,22 +20,20 @@ def _run (*args: str, check: bool = True, timeout: int = 60, env: dict [str, str
          env=run_env,
       )
    except subprocess.TimeoutExpired:
-      console.err (f"git {args [0]} timed out")
-      raise typer.Exit (1) from None
+      console.fatal (f"git {args [0]} timed out")
 
 
 def require ():
    result = _run ("rev-parse", "--git-dir", check=False)
+
    if result.returncode != 0:
-      console.err ("Not a git repository")
-      raise typer.Exit (1)
+      console.fatal ("Not a git repository")
 
 
 def require_clean (hint: str = "imp commit first"):
    if not is_clean ():
-      console.err ("Uncommitted changes")
       console.hint (hint)
-      raise typer.Exit (1)
+      console.fatal ("Uncommitted changes")
 
 
 def stage (all: bool = False):
@@ -74,21 +70,13 @@ def diff_range (rev_range: str, max_lines: int = 0) -> str:
 
 
 def diff_names () -> list [str]:
-   staged = _run ("diff", "--cached", "--name-only", check=False).stdout.strip ()
-   unstaged = _run ("diff", "--name-only", check=False).stdout.strip ()
-   untracked = _run (
-      "ls-files", "--others", "--exclude-standard",
-      check=False,
-   ).stdout.strip ()
+   blocks = [
+      _run ("diff", "--cached", "--name-only", check=False).stdout,
+      _run ("diff", "--name-only", check=False).stdout,
+      _run ("ls-files", "--others", "--exclude-standard", check=False).stdout,
+   ]
 
-   names = set ()
-   for block in [ staged, unstaged, untracked ]:
-      for line in block.splitlines ():
-         line = line.strip ()
-         if line:
-            names.add (line)
-
-   return sorted (names)
+   return sorted ({l.strip () for b in blocks for l in b.splitlines () if l.strip ()})
 
 
 def diff_file (path: str) -> str:
@@ -103,12 +91,8 @@ def diff_file (path: str) -> str:
 def diff_numstat () -> str:
    staged = _run ("diff", "--cached", "--numstat", check=False).stdout.strip ()
    unstaged = _run ("diff", "--numstat", check=False).stdout.strip ()
-   combined = ""
-   if staged:
-      combined += staged + "\n"
-   if unstaged:
-      combined += unstaged
-   return combined.strip ()
+
+   return "\n".join (filter (None, [ staged, unstaged ]))
 
 
 def branch () -> str:
@@ -142,12 +126,17 @@ def commit (msg: str, amend: bool = False, date: str = ""):
    _run (*args, env={ "GIT_COMMITTER_DATE": date } if date else {})
 
 
-def commit_count () -> int:
-   result = _run ("rev-list", "--count", "HEAD", check=False)
+def _count_revs (spec: str) -> int:
+   result = _run ("rev-list", "--count", spec, check=False)
+
    try:
       return int (result.stdout.strip ())
    except ValueError:
       return 0
+
+
+def commit_count () -> int:
+   return _count_revs ("HEAD")
 
 
 def is_clean () -> bool:
@@ -197,19 +186,11 @@ def has_upstream () -> bool:
 
 
 def count_ahead () -> int:
-   result = _run ("rev-list", "--count", "@{u}..HEAD", check=False)
-   try:
-      return int (result.stdout.strip ())
-   except ValueError:
-      return 0
+   return _count_revs ("@{u}..HEAD")
 
 
 def count_behind () -> int:
-   result = _run ("rev-list", "--count", "HEAD..@{u}", check=False)
-   try:
-      return int (result.stdout.strip ())
-   except ValueError:
-      return 0
+   return _count_revs ("HEAD..@{u}")
 
 
 def log_oneline (count: int = 10, rev_range: str = "") -> str:
@@ -322,6 +303,14 @@ def checkout (ref: str, create: bool = False):
    _run (*args)
 
 
+def checkout_side (path: str, side: str):
+   _run ("checkout", f"--{side}", "--", path)
+
+
+def rm (path: str):
+   _run ("rm", "--", path)
+
+
 def show (ref: str = "HEAD", fmt: str = "", stat: bool = False) -> str:
    args = [ "show" ]
    if fmt:
@@ -387,6 +376,11 @@ def repo_name () -> str:
    return Path (repo_root ()).name
 
 
+def git_dir () -> str:
+   result = _run ("rev-parse", "--git-dir", check=False)
+   return result.stdout.strip ()
+
+
 def rev_parse (ref: str) -> str:
    result = _run ("rev-parse", ref, check=False)
    return result.stdout.strip ()
@@ -412,17 +406,16 @@ def conflict_content (path: str) -> str:
 def merge_in_progress () -> bool:
    from pathlib import Path
 
-   git_dir = _run ("rev-parse", "--git-dir", check=False).stdout.strip ()
-   return Path (git_dir, "MERGE_HEAD").exists ()
+   return Path (git_dir (), "MERGE_HEAD").exists ()
 
 
 def rebase_in_progress () -> bool:
    from pathlib import Path
 
-   git_dir = _run ("rev-parse", "--git-dir", check=False).stdout.strip ()
+   gd = git_dir ()
    return (
-      Path (git_dir, "rebase-merge").exists ()
-      or Path (git_dir, "rebase-apply").exists ()
+      Path (gd, "rebase-merge").exists ()
+      or Path (gd, "rebase-apply").exists ()
    )
 
 

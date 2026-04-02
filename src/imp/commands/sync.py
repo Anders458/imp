@@ -21,9 +21,8 @@ def sync (
    b = git.branch ()
 
    if not git.has_upstream ():
-      console.err ("No upstream branch")
       console.hint (f"git push -u origin {b}")
-      raise typer.Exit (1)
+      console.fatal ("No upstream branch")
 
    console.label ("Branch")
    console.item (b)
@@ -51,9 +50,8 @@ def sync (
    if behind > 0:
       console.muted ("Rebasing...")
       if not git.rebase ():
-         console.err ("Rebase failed")
          console.hint ("imp resolve to fix conflicts, or git rebase --abort")
-         raise typer.Exit (1)
+         console.fatal ("Rebase failed")
       console.success ("Rebased")
 
    if ahead > 0 or behind > 0:

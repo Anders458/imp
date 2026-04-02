@@ -1,15 +1,10 @@
-import subprocess
-from datetime import date
-from pathlib import Path
-
 import typer
 
 from imp import ai, console, git, prompts, version
 from imp.commands.release import (
-   _push_release,
-   _rollback_release,
-   _squash_commits,
-   _write_changelog,
+   current_version,
+   do_release,
+   release_scope,
 )
 
 
@@ -31,9 +26,8 @@ def ship (
       console.warn (f"Releasing from {git.branch ()}, not {base}")
 
    if level not in ("patch", "minor", "major"):
-      console.err (f"Invalid level: {level}")
       console.hint ("use patch, minor, or major")
-      raise typer.Exit (1)
+      console.fatal (f"Invalid level: {level}")
 
    console.header ("Ship")
 
@@ -53,79 +47,17 @@ def ship (
    console.success ("Committed")
    console.out.print ()
 
-   tag = git.last_tag ()
+   tag, _log, count = release_scope ()
 
-   log = ""
-   if tag:
-      log = git.log_oneline (rev_range=f"{tag}..HEAD")
-
-   if not log:
-      log = git.log_oneline (count=20)
-      tag = ""
-
-   if not log:
-      console.muted ("No commits to release")
-      raise typer.Exit (0)
-
-   count = len (log.splitlines ())
-
-   highest = git.highest_tag ()
-   current = highest.lstrip ("v") if highest else "0.0.0"
-   if not current:
-      current = "0.0.0"
-
-   new_version = version.bump (current, level)
+   new_version = version.bump (current_version (), level)
 
    if git.tag_exists (f"v{new_version}"):
-      console.err (f"Tag v{new_version} already exists")
       console.hint (f"pick a different version, or: git tag -d v{new_version}")
-      raise typer.Exit (1)
+      console.fatal (f"Tag v{new_version} already exists")
 
-   if tag:
-      subjects = git.log_subjects (rev_range=f"{tag}..HEAD")
-   else:
-      subjects = git.log_subjects (count=count)
+   will_push = git.remote_exists ()
 
-   entry = version.changelog_from_commits (subjects)
-   summary = f"chore: release v{new_version}"
-   today = date.today ().isoformat ()
-   new_entry = f"## [{new_version}] - {today}\n\n{entry}"
+   do_release (new_version, tag, count, will_push)
 
-   root = git.repo_root ()
-   changelog_path = Path (root) / "CHANGELOG.md"
-
-   original_head = git.rev_parse ("HEAD")
-   original_changelog = ""
-   if changelog_path.is_file ():
-      original_changelog = changelog_path.read_text ()
-
-   committed = False
-
-   try:
-      _write_changelog (changelog_path, new_entry)
-      console.success ("Updated CHANGELOG.md")
-
-      can_squash = _squash_commits (tag, summary, changelog_path, count)
-      committed = True
-
-      git.tag (f"v{new_version}")
-      console.success (f"Tagged v{new_version}")
-
-   except (subprocess.CalledProcessError, OSError) as e:
-      msg = getattr (e, "stderr", "") or str (e)
-      console.err (f"Release failed: {msg.strip ()}")
-      _rollback_release (
-         new_version, original_head, changelog_path,
-         original_changelog, committed,
-      )
-      raise typer.Exit (1) from None
-
-   if git.remote_exists ():
-      try:
-         _push_release (new_version, entry, can_squash)
-      except (subprocess.CalledProcessError, OSError) as e:
-         msg = getattr (e, "stderr", "") or str (e)
-         console.err (f"Push failed: {msg.strip ()}")
-         raise typer.Exit (1) from None
-   else:
+   if not will_push:
       console.muted ("No remote, skipped push")

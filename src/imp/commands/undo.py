@@ -17,14 +17,13 @@ def undo (
 
    console.header ("Undo")
 
-   if git.commit_count () == 0:
+   total = git.commit_count ()
+
+   if total == 0:
       console.muted ("No commits to undo")
       raise typer.Exit (0)
-
-   total = git.commit_count ()
    if count > total:
-      console.err (f"Only {total} commits available")
-      raise typer.Exit (1)
+      console.fatal (f"Only {total} commits available")
 
    log = git.log_oneline (count=count)
    console.items ("Commits to undo", log)

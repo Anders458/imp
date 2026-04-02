@@ -35,9 +35,8 @@ def pr (
    git.require ()
 
    if not shutil.which ("gh"):
-      console.err ("GitHub CLI (gh) not installed")
       console.hint ("https://cli.github.com")
-      raise typer.Exit (1)
+      console.fatal ("GitHub CLI (gh) not installed")
 
    console.header ("Pull Request")
 
@@ -45,15 +44,13 @@ def pr (
    base = git.base_branch ()
 
    if b == base:
-      console.err (f"Cannot create PR from {base}")
       console.hint ("imp branch <description>")
-      raise typer.Exit (1)
+      console.fatal (f"Cannot create PR from {base}")
 
    log = git.log_oneline (rev_range=f"{base}..{b}")
 
    if not log:
-      console.err (f"No commits on {b}")
-      raise typer.Exit (1)
+      console.fatal (f"No commits on {b}")
 
    console.label ("Branch")
    console.item (f"{b} → {base}")
@@ -115,8 +112,7 @@ def pr (
       )
       pr_url = result.stdout.strip ()
    except subprocess.CalledProcessError:
-      console.err ("Failed to create PR")
-      raise typer.Exit (1) from None
+      console.fatal ("Failed to create PR")
 
    console.out.print ()
    console.success ("Created PR")

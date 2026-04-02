@@ -1,7 +1,7 @@
 import typer
-from rich.console import Console
 
 from imp import __version__
+from imp import console
 from imp.commands.amend import amend
 from imp.commands.branch import branch
 from imp.commands.changelog import changelog
@@ -19,6 +19,7 @@ from imp.commands.release import release
 from imp.commands.resolve import resolve
 from imp.commands.revert import revert
 from imp.commands.review import review
+from imp.commands.setup import setup
 from imp.commands.ship import ship
 from imp.commands.split import split
 from imp.commands.status import status
@@ -35,7 +36,7 @@ app = typer.Typer (
 
 def _version (value: bool):
    if value:
-      Console ().print (f"imp {__version__}")
+      console.out.print (f"imp {__version__}")
       raise typer.Exit ()
 
 
@@ -69,6 +70,7 @@ app.command () (release)
 app.command () (resolve)
 app.command () (revert)
 app.command () (review)
+app.command () (setup)
 app.command () (ship)
 app.command () (split)
 app.command () (status)

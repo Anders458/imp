@@ -38,9 +38,8 @@ def commit (
 
    d = git.diff (staged=True)
    if not d:
-      console.err ("Nothing staged")
       console.hint ("git add <files>, or imp commit -a")
-      raise typer.Exit (1)
+      console.fatal ("Nothing staged")
 
    d = ai.truncate (d)
 
@@ -49,23 +48,7 @@ def commit (
    b = git.branch ()
    msg = ai.commit_message (prompts.commit (d, b, whisper))
 
-   if yes:
-      console.item (msg)
-      git.commit (msg)
-   else:
-      choice = console.review (msg)
-
-      if choice == "Edit":
-         msg = console.edit (msg)
-         if not msg.strip ():
-            console.muted ("Empty message, cancelled")
-            raise typer.Exit (0)
-         git.commit (msg)
-      elif choice == "Yes":
-         git.commit (msg)
-      else:
-         console.muted ("Cancelled")
-         raise typer.Exit (0)
+   console.review_commit (msg, yes)
 
    console.success ("Committed")
 

@@ -4,49 +4,38 @@ from pathlib import Path
 
 import pytest
 
-from imp import ai
+from imp import ai, console
+
+
+def git_run (cwd, *args):
+   return subprocess.run (
+      [ "git", *args ],
+      cwd=cwd,
+      check=True,
+      capture_output=True,
+      text=True,
+   )
+
+
+def commit_file (repo, name, content, message):
+   (repo / name).write_text (content)
+   git_run (repo, "add", name)
+   git_run (repo, "commit", "-m", message)
+
+
+def last_commit_subject (repo):
+   result = git_run (repo, "log", "-1", "--format=%s")
+   return result.stdout.strip ()
 
 
 @pytest.fixture
 def repo (tmp_path):
    """Create a temporary git repo with one commit."""
 
-   subprocess.run (
-      [ "git", "init", "-b", "main" ],
-      cwd=tmp_path,
-      check=True,
-      capture_output=True,
-   )
-
-   subprocess.run (
-      [ "git", "config", "user.email", "test@test.com" ],
-      cwd=tmp_path,
-      check=True,
-      capture_output=True,
-   )
-
-   subprocess.run (
-      [ "git", "config", "user.name", "Test" ],
-      cwd=tmp_path,
-      check=True,
-      capture_output=True,
-   )
-
-   (tmp_path / "file.txt").write_text ("hello\n")
-
-   subprocess.run (
-      [ "git", "add", "file.txt" ],
-      cwd=tmp_path,
-      check=True,
-      capture_output=True,
-   )
-
-   subprocess.run (
-      [ "git", "commit", "-m", "Initial commit" ],
-      cwd=tmp_path,
-      check=True,
-      capture_output=True,
-   )
+   git_run (tmp_path, "init", "-b", "main")
+   git_run (tmp_path, "config", "user.email", "test@test.com")
+   git_run (tmp_path, "config", "user.name", "Test")
+   commit_file (tmp_path, "file.txt", "hello\n", "Initial commit")
 
    old_cwd = Path.cwd ()
    os.chdir (tmp_path)
@@ -62,3 +51,9 @@ def mock_ai (monkeypatch):
       monkeypatch.setattr (ai, "_call", lambda prompt, model: response)
 
    return _mock
+
+
+@pytest.fixture
+def mock_spin (monkeypatch):
+   """Bypass console.spin, call function directly."""
+   monkeypatch.setattr (console, "spin", lambda title, fn, *args: fn (*args))

@@ -22,9 +22,8 @@ def fix (
    git.require ()
 
    if not shutil.which ("gh"):
-      console.err ("GitHub CLI (gh) not installed")
       console.hint ("https://cli.github.com")
-      raise typer.Exit (1)
+      console.fatal ("GitHub CLI (gh) not installed")
 
    console.header (f"Fix Issue #{issue}")
 
@@ -39,8 +38,7 @@ def fix (
       )
       data = json.loads (result.stdout)
    except (subprocess.CalledProcessError, json.JSONDecodeError, OSError) as e:
-      console.err (f"Could not fetch issue #{issue}: {e}")
-      raise typer.Exit (1) from None
+      console.fatal (f"Could not fetch issue #{issue}: {e}")
 
    title = data.get ("title", "")
    body = (data.get ("body", "") or "") [:500]
@@ -53,8 +51,7 @@ def fix (
    name = ai.oneline (name)
 
    if not validate.branch (name):
-      console.err (f"Invalid branch name: {name}")
-      raise typer.Exit (1)
+      console.fatal (f"Invalid branch name: {name}")
 
    console.label ("Branch")
    console.item (name)

@@ -6,6 +6,7 @@ from imp import ai, console, git, prompts
 def revert (
    ref: str | None = typer.Argument (None, help="Commit hash to revert"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
+   yes: bool = typer.Option (False, "--yes", "-y", help="Accept AI message without review"),
 ):
    """Safely revert a pushed commit.
 
@@ -34,8 +35,7 @@ def revert (
       raise typer.Exit (0)
 
    if not git.rev_parse (ref):
-      console.err (f"Invalid commit: {ref}")
-      raise typer.Exit (1)
+      console.fatal (f"Invalid commit: {ref}")
 
    commit_msg = git.show (ref, fmt="%s")
    commit_hash = git.rev_parse_short (ref)
@@ -63,21 +63,7 @@ def revert (
 
    git.revert_commit (ref, no_commit=True)
 
-   choice = console.review (msg)
-
-   if choice == "Edit":
-      msg = console.edit (msg)
-      if not msg.strip ():
-         git.revert_abort ()
-         console.muted ("Empty message, cancelled")
-         raise typer.Exit (0)
-      git.commit (msg)
-   elif choice == "Yes":
-      git.commit (msg)
-   else:
-      git.revert_abort ()
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
+   console.review_commit (msg, yes, on_cancel=git.revert_abort)
 
    console.success (f"Reverted {commit_hash}")
    console.hint ("imp sync to push, or imp undo to cancel")

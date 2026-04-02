@@ -3,20 +3,8 @@ from unittest.mock import patch
 
 from typer.testing import CliRunner
 
-from imp.commands.changelog import _parse_since, _build_version_map, _infer_versions, _generate_changelog, _tag_plan
+from imp.commands.changelog import _build_version_map, _infer_versions, _generate_changelog, _tag_plan
 from imp.main import app
-
-
-class TestParseSince:
-
-   def test_empty_returns_empty (self):
-      assert _parse_since ("") == ""
-
-   def test_strips_whitespace (self):
-      assert _parse_since ("  v0.0.10  ") == "v0.0.10"
-
-   def test_passthrough (self):
-      assert _parse_since ("abc1234") == "abc1234"
 
 
 class TestBuildVersionMap:

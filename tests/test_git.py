@@ -5,6 +5,8 @@ import typer
 
 from imp import git
 
+from tests.conftest import git_run
+
 
 class TestRequire:
 
@@ -24,7 +26,7 @@ class TestDiff:
 
    def test_staged_changes (self, repo):
       (repo / "file.txt").write_text ("changed\n")
-      subprocess.run ([ "git", "add", "file.txt" ], cwd=repo, check=True)
+      git_run (repo, "add", "file.txt")
       assert "changed" in git.diff (staged=True)
 
    def test_unstaged_changes (self, repo):
@@ -43,12 +45,7 @@ class TestStage:
    def test_stage_all (self, repo):
       (repo / "new.txt").write_text ("new\n")
       git.stage (all=True)
-      result = subprocess.run (
-         [ "git", "diff", "--cached", "--name-only" ],
-         cwd=repo,
-         capture_output=True,
-         text=True,
-      )
+      result = git_run (repo, "diff", "--cached", "--name-only")
       assert "new.txt" in result.stdout
 
 
@@ -68,12 +65,7 @@ class TestBaseBranch:
       assert git.base_branch () == "main"
 
    def test_returns_master (self, repo):
-      subprocess.run (
-         [ "git", "branch", "-m", "main", "master" ],
-         cwd=repo,
-         check=True,
-         capture_output=True,
-      )
+      git_run (repo, "branch", "-m", "main", "master")
       assert git.base_branch () == "master"
 
 

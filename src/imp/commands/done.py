@@ -21,17 +21,15 @@ def done (
    base = target or git.base_branch ()
 
    if feature == base:
-      console.err (f"Already on {base}")
       console.hint ("switch to a feature branch first")
-      raise typer.Exit (1)
+      console.fatal (f"Already on {base}")
 
    if target and not git.rev_parse (target):
       if git.remote_has_branch (target):
          git.checkout (target)
          git.checkout (feature)
       else:
-         console.err (f"Branch {target} does not exist")
-         raise typer.Exit (1)
+         console.fatal (f"Branch {target} does not exist")
 
    console.header ("Done")
 
@@ -74,9 +72,8 @@ def done (
          git.pull ()
 
       if not git.merge (feature, no_ff=True):
-         console.err ("Merge conflict")
          console.hint ("imp resolve to fix conflicts")
-         raise typer.Exit (1)
+         console.fatal ("Merge conflict")
 
       console.success (f"Merged {feature} into {base}")
 

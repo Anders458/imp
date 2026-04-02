@@ -1,5 +1,4 @@
 import json
-import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -103,14 +102,12 @@ def split (
    files = git.diff_names ()
 
    if not files:
-      console.err ("No changes to split")
       console.hint ("make some changes first")
-      raise typer.Exit (1)
+      console.fatal ("No changes to split")
 
    if len (files) == 1:
-      console.err ("Only 1 file changed")
       console.hint ("use imp commit instead")
-      raise typer.Exit (1)
+      console.fatal ("Only 1 file changed")
 
    console.header ("Split")
 
@@ -123,29 +120,20 @@ def split (
 
    if is_large:
       stats = _build_file_stats (files)
-      response = ai.smart (prompts.split_plan (stats, b, whisper))
+      prompt = prompts.split_plan (stats, b, whisper)
    else:
-      response = ai.smart (prompts.split (file_diffs, b, whisper))
-   response = re.sub (r"^```\w*\n?", "", response, flags=re.MULTILINE)
-   response = re.sub (r"\n?```$", "", response.strip ())
+      prompt = prompts.split (file_diffs, b, whisper)
 
+   response = ai.strip_fences (ai.smart (prompt))
    groups = _validate_response (response, files)
 
    if groups is None:
       console.warn ("Retrying...")
-
-      if is_large:
-         response = ai.smart (prompts.split_plan (stats, b, whisper))
-      else:
-         response = ai.smart (prompts.split (file_diffs, b, whisper))
-
-      response = re.sub (r"^```\w*\n?", "", response, flags=re.MULTILINE)
-      response = re.sub (r"\n?```$", "", response.strip ())
+      response = ai.strip_fences (ai.smart (prompt))
       groups = _validate_response (response, files)
 
       if groups is None:
-         console.err ("Split failed after retry")
-         raise typer.Exit (1)
+         console.fatal ("Split failed after retry")
 
    if len (groups) == 1:
       console.warn ("AI grouped everything into a single commit")

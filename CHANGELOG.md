@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.30] - 2026-04-02
+
+### Added
+- Add setup command and refactor error handling
+
 ## [0.0.29] - 2026-04-01
 
 ### Added

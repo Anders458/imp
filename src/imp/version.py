@@ -25,8 +25,10 @@ def changelog_from_commits (subjects: str) -> str:
    fixed = []
    changed = []
 
+   from imp.validate import TYPES_PATTERN
+
    pattern = re.compile (
-      r"^(feat|fix|refactor|build|chore|docs|test|style|perf|ci)"
+      rf"^({TYPES_PATTERN})"
       r"(\(.+\))?!?: (.+)$"
    )
 

@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 
 import typer
@@ -11,14 +10,9 @@ MARKER = "<<<<<<<"
 
 
 def _theirs_branch () -> str:
-   git_dir = subprocess.run (
-      [ "git", "rev-parse", "--git-dir" ],
-      capture_output=True,
-      text=True,
-      check=False,
-   ).stdout.strip ()
+   gd = git.git_dir ()
 
-   merge_msg = Path (git_dir, "MERGE_MSG")
+   merge_msg = Path (gd, "MERGE_MSG")
    if merge_msg.exists ():
       first_line = merge_msg.read_text ().splitlines () [0]
       parts = first_line.split ("'")
@@ -28,20 +22,8 @@ def _theirs_branch () -> str:
    return "incoming"
 
 
-def _checkout_ours (path: str):
-   subprocess.run (
-      [ "git", "checkout", "--ours", "--", path ],
-      check=True,
-      capture_output=True,
-   )
-
-
-def _checkout_theirs (path: str):
-   subprocess.run (
-      [ "git", "checkout", "--theirs", "--", path ],
-      check=True,
-      capture_output=True,
-   )
+def _checkout_side (path: str, side: str):
+   git.checkout_side (path, side)
 
 
 def resolve (
@@ -67,6 +49,7 @@ def resolve (
       console.item (f)
    console.out.print ()
 
+   root = Path (git.repo_root ())
    ours = git.branch () or "HEAD"
    theirs = _theirs_branch ()
 
@@ -91,11 +74,7 @@ def resolve (
             git.add ([ path ])
             num_resolved += 1
          elif choice == "Delete":
-            subprocess.run (
-               [ "git", "rm", "--", path ],
-               check=True,
-               capture_output=True,
-            )
+            git.rm (path)
             num_resolved += 1
          else:
             num_skipped += 1
@@ -126,21 +105,21 @@ def resolve (
       )
 
       if choice == "AI suggestion":
-         Path (path).write_text (result)
+         (root / path).write_text (result)
          git.add ([ path ])
          num_resolved += 1
       elif choice == "Ours":
-         _checkout_ours (path)
+         _checkout_side (path, "ours")
          git.add ([ path ])
          num_resolved += 1
       elif choice == "Theirs":
-         _checkout_theirs (path)
+         _checkout_side (path, "theirs")
          git.add ([ path ])
          num_resolved += 1
       elif choice == "Edit":
          edited = console.edit (result)
          if edited.strip ():
-            Path (path).write_text (edited)
+            (root / path).write_text (edited)
             git.add ([ path ])
             num_resolved += 1
          else:

@@ -16,9 +16,8 @@ _ENV_OVERRIDES = {
 
 
 def path () -> Path:
-   xdg = os.environ.get ("XDG_CONFIG_HOME", "")
-   if not xdg:
-      xdg = str (Path.home () / ".config")
+   xdg = os.environ.get ("XDG_CONFIG_HOME", "") or str (Path.home () / ".config")
+
    return Path (xdg) / "imp" / "config.json"
 
 

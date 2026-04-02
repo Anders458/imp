@@ -7,10 +7,6 @@ import typer
 from imp import ai, console, git, prompts, version
 
 
-def _parse_since (value: str) -> str:
-   return value.strip () if value else ""
-
-
 def _build_version_map (
    tags: dict [str, str],
    commits: list [dict [str, str]],
@@ -187,21 +183,19 @@ def changelog (
    console.header ("Changelog")
 
    # Resolve --since to a commit ref
-   since_ref = _parse_since (since)
+   since_ref = (since or "").strip ()
    since_commit = ""
 
    if since_ref:
       if re.match (r"^\d{4}-\d{2}-\d{2}$", since_ref):
          since_commit = git.log_after_date (since_ref)
          if not since_commit:
-            console.err (f"No commits found after {since_ref}")
-            raise typer.Exit (1)
+            console.fatal (f"No commits found after {since_ref}")
          console.muted (f"Starting from first commit after {since_ref}")
       else:
          since_commit = git.rev_parse (since_ref)
          if not since_commit:
-            console.err (f"Could not resolve: {since_ref}")
-            raise typer.Exit (1)
+            console.fatal (f"Could not resolve: {since_ref}")
          console.muted (f"Starting from {since_ref}")
 
    # Gather data

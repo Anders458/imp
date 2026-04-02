@@ -18,9 +18,9 @@
 ---
 
 ```bash
+imp setup <url>      # init repo, add remote, generate .gitignore
 imp commit -a        # stages everything, generates message, commits
-imp branch "auth"    # creates feat/user-auth
-imp review           # AI code review of your changes
+imp review -l 3      # AI code review of last 3 commits
 imp release          # squash, changelog, tag, push
 ```
 
@@ -56,6 +56,10 @@ imp doctor
 ## Quick Start
 
 ```bash
+# Start a new project
+imp setup https://github.com/you/project.git
+# -> Initializes repo, adds remote, generates .gitignore
+
 # Make some changes, then commit with an AI message
 imp commit -a
 # -> "feat: add rate limiting to API endpoints"
@@ -70,6 +74,10 @@ imp branch "add user authentication"
 imp fix 42
 # -> Fetches issue, suggests fix/login-redirect-42
 
+# Review recent commits
+imp review -l 3
+# -> AI reviews the diff of the last 3 commits
+
 # Ship a release
 imp release
 # -> Version bump: patch / minor / major
@@ -82,44 +90,46 @@ imp release
 
 | Command | Description |
 |---|---|
-| `imp commit [-a]` | Generate commit message from diff. `-a` stages all. |
-| `imp amend` | Rewrite last commit message from the full diff. |
+| `imp commit [-a] [-p] [-y] [-E glob] [-w hint]` | Generate commit message from diff. `-a` stages all, `-p` pushes after. |
+| `imp amend [-y] [-w hint]` | Rewrite last commit message from the full diff. |
 | `imp undo [N]` | Undo last N commits, keep changes staged. |
-| `imp revert [hash]` | Safely revert a pushed commit. |
+| `imp revert [hash] [-w hint]` | Safely revert a commit. No hash: interactive picker. |
 | `imp push` | Push commits to origin. Sets upstream on first push. |
-| `imp sync` | Pull, rebase, push in one step. |
-| `imp resolve` | AI-assisted merge conflict resolution. |
+| `imp sync [-y]` | Pull, rebase, push in one step. |
+| `imp resolve [-w hint]` | AI-assisted merge conflict resolution. |
 
 ### Branching
 
 | Command | Description |
 |---|---|
-| `imp branch <desc>` | Create branch from plain English description. |
+| `imp branch <desc> [-y] [-w hint]` | Create branch from plain English description. |
 | `imp branch` | Interactive branch switcher. |
-| `imp fix <issue>` | Create branch from GitHub issue number. |
-| `imp pr` | Create pull request with AI title and body. |
-| `imp done [target]` | Merge feature branch, clean up local and remote. |
+| `imp fix <issue> [-y] [-w hint]` | Create branch from GitHub issue number. |
+| `imp pr [-y] [-w hint]` | Create pull request with AI title and body. |
+| `imp done [target] [-y]` | Merge feature branch, clean up local and remote. |
 
 ### Analysis
 
 | Command | Description |
 |---|---|
-| `imp review` | AI code review of staged or unstaged changes. |
-| `imp split` | Group dirty files into logical commits via AI. |
+| `imp review [-l N] [-f] [-d] [-w hint]` | AI code review of staged, unstaged, or last N commits. `-f` sends fixes to Claude Code, `-d` skips permission prompts. |
+| `imp split [-y] [-w hint]` | Group dirty files into logical commits via AI. |
+| `imp changelog [--since tag] [--apply] [-y]` | Regenerate CHANGELOG.md from git history. |
 | `imp status` | Repo overview: branch, changes, sync state. |
-| `imp log [-n N]` | Pretty commit graph. |
+| `imp log [-n N] [ref]` | Pretty commit graph. Optional branch or ref. |
 
 ### Release
 
 | Command | Description |
 |---|---|
 | `imp release` | Squash commits, generate changelog, tag, push, create GitHub release. |
-| `imp ship [level]` | Commit all + release in one shot, no prompts. Default: patch. |
+| `imp ship [level] [-w hint]` | Commit all + release in one shot, no prompts. Default: patch. |
 
 ### Setup
 
 | Command | Description |
 |---|---|
+| `imp setup <url>` | Initialize repo, add remote, generate `.gitignore`. |
 | `imp config` | Interactive AI provider and model setup. |
 | `imp doctor` | Verify tools, config, and AI connection. |
 | `imp clean` | Delete merged branches (local and remote). |
@@ -130,12 +140,14 @@ Any AI command accepts `--whisper` / `-w` to hint the AI without overriding its 
 ```bash
 imp commit -a -w "use IMP-42 as ticket"
 imp review -w "focus on error handling"
+imp review -l 5       # review the last 5 commits
 ```
 
 ## Workflows
 
 | Flow | Steps |
 |---|---|
+| **New project** | `setup <url>` → `commit -a` → `push` |
 | **Solo** | `commit -a` → `push` → `release` |
 | **Feature branch** | `branch` → `commit -a` → `pr` → `done` |
 | **Hotfix** | `fix 42` → `commit -a` → `pr` → `done` |

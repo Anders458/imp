@@ -1,9 +1,8 @@
 import json
+import re
 import subprocess
 import urllib.error
 import urllib.request
-
-import typer
 
 from imp import config, console
 
@@ -25,8 +24,7 @@ def _claude (prompt: str, model: str) -> str:
 
    if result.returncode != 0:
       detail = result.stderr.strip () or result.stdout.strip ()
-      console.err (f"claude CLI failed: {detail}" if detail else "claude CLI failed")
-      raise typer.Exit (1)
+      console.fatal (f"claude CLI failed: {detail}" if detail else "claude CLI failed")
 
    return result.stdout
 
@@ -49,8 +47,7 @@ def _ollama (prompt: str, model: str) -> str:
          body = json.loads (resp.read ())
          return body.get ("response", "")
    except (urllib.error.URLError, json.JSONDecodeError, OSError) as e:
-      console.err (f"ollama request failed: {e}")
-      raise typer.Exit (1) from None
+      console.fatal (f"ollama request failed: {e}")
 
 
 def _call (prompt: str, model: str) -> str:
@@ -60,34 +57,25 @@ def _call (prompt: str, model: str) -> str:
    elif provider == "ollama":
       return _ollama (prompt, model)
    else:
-      console.err (f"Unknown AI provider: {provider}")
-      raise typer.Exit (1)
+      console.fatal (f"Unknown AI provider: {provider}")
+
+
+def _invoke (tier: str, prompt: str, spin: bool = True) -> str:
+   model = config.get (f"model:{tier}")
+   result = console.spin ("Thinking...", _call, prompt, model) if spin else _call (prompt, model)
+
+   if not result or not result.strip ():
+      console.fatal ("Empty response from AI")
+
+   return result
 
 
 def fast (prompt: str, spin: bool = True) -> str:
-   model = config.get ("model:fast")
-   if spin:
-      result = console.spin ("Thinking...", _call, prompt, model)
-   else:
-      result = _call (prompt, model)
-   if not result or not result.strip ():
-      console.err ("Empty response from AI")
-      raise typer.Exit (1)
-
-   return result
+   return _invoke ("fast", prompt, spin)
 
 
 def smart (prompt: str, spin: bool = True) -> str:
-   model = config.get ("model:smart")
-   if spin:
-      result = console.spin ("Thinking...", _call, prompt, model)
-   else:
-      result = _call (prompt, model)
-   if not result or not result.strip ():
-      console.err ("Empty response from AI")
-      raise typer.Exit (1)
-
-   return result
+   return _invoke ("smart", prompt, spin)
 
 
 def ping () -> bool:
@@ -95,10 +83,13 @@ def ping () -> bool:
       model = config.get ("model:fast")
       result = _call ("Reply with OK", model)
       return bool (result and result.strip ())
-   except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
+   except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError, SystemExit):
       return False
-   except SystemExit:
-      return False
+
+
+def strip_fences (text: str) -> str:
+   text = re.sub (r"^```\w*\n?", "", text, flags=re.MULTILINE)
+   return re.sub (r"\n?```$", "", text.strip ())
 
 
 def oneline (text: str) -> str:
@@ -124,8 +115,7 @@ def commit_message (prompt: str) -> str:
       msg = oneline (msg)
 
       if not validate.commit (msg):
-         console.err ("AI output not in Conventional Commits format")
          console.muted (msg)
-         raise typer.Exit (1)
+         console.fatal ("AI output not in Conventional Commits format")
 
    return msg
