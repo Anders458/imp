@@ -73,6 +73,7 @@ def _setup_gitignore (files: str):
    path = Path (".gitignore")
    existing = path.read_text ().strip () if path.exists () else ""
 
+   console.out.print ()
    result = ai.fast (prompts.gitignore (files, existing))
    result = result.strip ()
 

@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.31] - 2026-04-02
+
+### Changed
+- Add blank line before gitignore prompt
+
 ## [0.0.30] - 2026-04-02
 
 ### Added
