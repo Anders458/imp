@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.39] - 2026-04-08
+
+### Added
+- Add interactive release type selection
+
 ## [0.0.38] - 2026-04-07
 
 ### Fixed

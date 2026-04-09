@@ -251,7 +251,16 @@ def release ():
    current = git.branch ()
 
    if current != base:
-      return release_rc ()
+      rc = console.choose (
+         "Release type",
+         [ "rc   (pre-release)", "stable", "quit" ],
+      )
+
+      if rc.startswith ("rc"):
+         return release_rc ()
+      elif rc == "quit":
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
 
    git.require_clean ("imp commit first")
 

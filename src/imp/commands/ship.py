@@ -54,7 +54,12 @@ def ship (
 
    base = git.base_branch ()
 
-   if git.branch () != base:
+   rc = git.branch () != base and console.choose (
+      "Release type",
+      [ "rc   (pre-release)", "stable" ],
+   ).startswith ("rc")
+
+   if rc:
       do_release_rc (level)
    else:
       tag, _log, count = release_scope ()
