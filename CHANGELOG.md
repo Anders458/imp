@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.40] - 2026-04-12
+
+### Added
+- Add --rc and --stable flags to release and ship
+
 ## [0.0.39] - 2026-04-08
 
 ### Added

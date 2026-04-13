@@ -14,6 +14,8 @@ from imp.commands.split import do_split
 def ship (
    level: str = typer.Argument ("patch", help="Version bump: patch, minor, or major"),
    whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
+   rc: bool = typer.Option (False, "--rc", help="Tag as pre-release candidate"),
+   stable: bool = typer.Option (False, "--stable", help="Tag as stable release"),
 ):
    """Split changes into logical commits, then release.
 
@@ -52,14 +54,22 @@ def ship (
       console.muted ("No staged changes, skipping commit")
       console.out.print ()
 
+   if rc and stable:
+      console.fatal ("--rc and --stable are mutually exclusive")
+
    base = git.base_branch ()
 
-   rc = git.branch () != base and console.choose (
-      "Release type",
-      [ "rc   (pre-release)", "stable" ],
-   ).startswith ("rc")
-
    if rc:
+      is_rc = True
+   elif stable:
+      is_rc = False
+   else:
+      is_rc = git.branch () != base and console.choose (
+         "Release type",
+         [ "rc   (pre-release)", "stable" ],
+      ).startswith ("rc")
+
+   if is_rc:
       do_release_rc (level)
    else:
       tag, _log, count = release_scope ()

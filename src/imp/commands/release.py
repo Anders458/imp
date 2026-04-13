@@ -236,7 +236,10 @@ def release_rc ():
       console.success ("Pushed to origin")
 
 
-def release ():
+def release (
+   rc: bool = typer.Option (False, "--rc", help="Tag as pre-release candidate"),
+   stable: bool = typer.Option (False, "--stable", help="Tag as stable release"),
+):
    """Squash, changelog, tag, and push a release.
 
    Collects commits since the last tag, lets you pick a semver bump,
@@ -247,18 +250,23 @@ def release ():
 
    git.require ()
 
+   if rc and stable:
+      console.fatal ("--rc and --stable are mutually exclusive")
+
    base = git.base_branch ()
    current = git.branch ()
 
-   if current != base:
-      rc = console.choose (
+   if rc:
+      return release_rc ()
+   elif not stable and current != base:
+      choice = console.choose (
          "Release type",
          [ "rc   (pre-release)", "stable", "quit" ],
       )
 
-      if rc.startswith ("rc"):
+      if choice.startswith ("rc"):
          return release_rc ()
-      elif rc == "quit":
+      elif choice == "quit":
          console.muted ("Cancelled")
          raise typer.Exit (0)
 
