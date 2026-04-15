@@ -2,7 +2,7 @@ import subprocess
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, NoReturn, TypeVar
 
 import questionary
 import typer
@@ -77,7 +77,7 @@ def err (msg: str):
    ))
 
 
-def fatal (msg: str):
+def fatal (msg: str) -> NoReturn:
    err (msg)
    raise typer.Exit (1)
 

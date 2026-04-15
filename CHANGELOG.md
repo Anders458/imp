@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.43] - 2026-04-15
+
+### Changed
+- Add github pages site with seo metadata
+- Update readme, add contributing guide, expand pyproject metadata
+- Extract helpers, add noreturn typing, handle unreadable files in resolve
+
 ## [0.0.42] - 2026-04-15
 
 ### Changed

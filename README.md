@@ -2,10 +2,15 @@
    <img src="logo.png" alt="imp" width="160">
 </p>
 
-# Imp: clean up your git history with AI
+# Imp — AI git CLI for commit messages, history, changelogs, and PRs
 
-Messy commits, vague messages, and sloppy PRs slow teams down.
-`imp` rewrites a dirty working tree into clean, Conventional Commits and ships them with a real changelog. One command, every time.
+[![PyPI](https://img.shields.io/pypi/v/imp-git.svg)](https://pypi.org/project/imp-git/)
+[![Python](https://img.shields.io/pypi/pyversions/imp-git.svg)](https://pypi.org/project/imp-git/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+`imp` is an AI-powered git CLI that writes Conventional Commits, splits dirty working trees into logical commits, rewrites past history, generates changelogs, opens pull requests, and resolves merge conflicts. Works with the **Claude CLI** or local **Ollama** models.
+
+If you've used [aicommits](https://github.com/Nutlope/aicommits) or [OpenCommit](https://github.com/di-sukharev/opencommit) and wanted them to cover the *whole* git workflow instead of just the commit message, that's `imp`.
 
 ---
 
@@ -51,6 +56,9 @@ One dirty tree, three coherent Conventional Commits.
 
 ```bash
 pip install imp-git
+# or, no install at all:
+uvx --from imp-git imp doctor
+pipx run --spec imp-git imp doctor
 ```
 
 Configure your AI provider:
@@ -122,6 +130,25 @@ Add `--rc` for a release candidate, `--stable` to promote one.
 
 ---
 
+## How `imp` compares
+
+| | imp | aicommits | OpenCommit | commitizen |
+|---|---|---|---|---|
+| Commit message from diff | ✅ | ✅ | ✅ | ✋ manual prompt |
+| Conventional Commits | ✅ enforced | ✅ optional | ✅ optional | ✅ enforced |
+| Split dirty tree into commits | ✅ | ❌ | ❌ | ❌ |
+| Rewrite past history | ✅ `tidy` | ❌ | ❌ | ❌ |
+| AI changelog | ✅ | ❌ | ❌ | ✅ template-based |
+| AI PR title + body | ✅ | ❌ | ❌ | ❌ |
+| AI merge conflict resolution | ✅ | ❌ | ❌ | ❌ |
+| Local models (Ollama) | ✅ | partial | ✅ | n/a |
+| Claude CLI | ✅ | ❌ | ❌ | n/a |
+| Runtime deps | 3 | many (Node) | many (Node) | many (Python) |
+
+`aicommits` and `OpenCommit` are great if you only want commit messages. `imp` is for people who want the whole loop: dirty tree → clean commits → PR → release → changelog.
+
+---
+
 ## When to use imp
 
 - You have a pile of unrelated edits and need clean, reviewable commits
@@ -169,11 +196,34 @@ imp review -w "focus on error handling"
 
 ---
 
+## Configuration
+
+`imp config` writes `~/.config/imp/config.json` (or `$XDG_CONFIG_HOME/imp/config.json`).
+
+```json
+{
+   "provider": "claude",
+   "model:fast": "haiku",
+   "model:smart": "sonnet"
+}
+```
+
+| Key | Purpose | Values |
+|---|---|---|
+| `provider` | AI backend | `claude`, `ollama` |
+| `model:fast` | Short prompts (commit messages, dates) | Any model name your provider knows |
+| `model:smart` | Reasoning prompts (split, tidy, resolve, review) | Any model name your provider knows |
+
+Each key has a matching env var (`IMP_AI_PROVIDER`, `IMP_AI_MODEL_FAST`, `IMP_AI_MODEL_SMART`) that wins over the file.
+
+---
+
 ## Requirements
 
 - Python 3.10+
 - git
 - [gh](https://cli.github.com) (optional, for `fix`, `pr`, `release`)
+- An AI backend: the [Claude CLI](https://docs.claude.com/en/docs/claude-code) **or** a running [Ollama](https://ollama.com) instance
 
 ---
 

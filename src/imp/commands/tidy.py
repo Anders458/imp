@@ -6,6 +6,8 @@ import typer
 
 from imp import ai, console, git, prompts, validate
 
+MAX_PLAN_RETRIES = 1
+
 
 def tidy (
    range: str = typer.Argument ("", help="Range: count (5), ref (main), 'a..b', or '1 year ago'"),
@@ -118,33 +120,38 @@ def _pushed_count (base: str) -> int:
    if not upstream:
       return 0
 
-   result = subprocess.run (
-      [ "git", "rev-list", "--count", f"{base}..{upstream}" ],
-      capture_output=True, text=True, check=False,
-   )
-   try:
-      return int (result.stdout.strip ())
-   except ValueError:
-      return 0
+   return git.count_between (base, upstream)
 
 
 def _get_plan (commits: list [dict [str, str]], whisper: str) -> list [dict]:
    lines = "\n".join (f"{c ['hash'] [:12]} {c ['subject']}" for c in commits)
    prompt = prompts.tidy (lines, branch=git.branch (), whisper=whisper)
 
-   raw = ai.strip_fences (ai.smart (prompt))
+   last_raw = ""
+   for attempt in range (MAX_PLAN_RETRIES + 1):
+      raw = ai.strip_fences (ai.smart (prompt))
+      last_raw = raw
 
-   try:
-      plan = json.loads (raw)
-   except json.JSONDecodeError:
-      console.muted (raw)
-      console.fatal ("AI did not return valid JSON")
+      try:
+         plan = json.loads (raw)
+      except json.JSONDecodeError:
+         if attempt < MAX_PLAN_RETRIES:
+            console.warn ("Retrying (invalid JSON)...")
+            continue
+         console.muted (raw)
+         console.fatal ("AI did not return valid JSON")
 
-   if not isinstance (plan, list) or not plan:
-      console.fatal ("AI returned an empty plan")
+      if not isinstance (plan, list) or not plan:
+         if attempt < MAX_PLAN_RETRIES:
+            console.warn ("Retrying (empty plan)...")
+            continue
+         console.fatal ("AI returned an empty plan")
 
-   _validate_plan (plan, commits)
-   return plan
+      _validate_plan (plan, commits)
+      return plan
+
+   console.muted (last_raw)
+   console.fatal ("AI did not return a usable plan")
 
 
 def _validate_plan (plan: list [dict], commits: list [dict [str, str]]):

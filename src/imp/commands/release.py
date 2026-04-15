@@ -107,6 +107,14 @@ def current_version () -> str:
    return current or "0.0.0"
 
 
+def _semver_bumps (current: str) -> tuple [str, str, str]:
+   return (
+      version.bump (current, "patch"),
+      version.bump (current, "minor"),
+      version.bump (current, "major"),
+   )
+
+
 def do_release (
    new_version: str,
    tag: str,
@@ -190,9 +198,7 @@ def release_rc ():
 
    current = current_version ()
 
-   patch_ver = version.bump (current, "patch")
-   minor_ver = version.bump (current, "minor")
-   major_ver = version.bump (current, "major")
+   patch_ver, minor_ver, major_ver = _semver_bumps (current)
 
    patch_rc = version.next_rc (patch_ver, git.rc_tags (patch_ver))
    minor_rc = version.next_rc (minor_ver, git.rc_tags (minor_ver))
@@ -282,9 +288,7 @@ def release (
 
    current = current_version ()
 
-   patch_ver = version.bump (current, "patch")
-   minor_ver = version.bump (current, "minor")
-   major_ver = version.bump (current, "major")
+   patch_ver, minor_ver, major_ver = _semver_bumps (current)
 
    console.muted (f"Current: {current}")
    console.out.print ()

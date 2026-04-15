@@ -51,14 +51,20 @@ def _ollama (prompt: str, model: str) -> str:
       console.fatal (f"ollama request failed: {e}")
 
 
+_PROVIDERS = {
+   "claude": _claude,
+   "ollama": _ollama,
+}
+
+
 def _call (prompt: str, model: str) -> str:
    provider = config.get ("provider")
-   if provider == "claude":
-      return _claude (prompt, model)
-   elif provider == "ollama":
-      return _ollama (prompt, model)
-   else:
+   handler = _PROVIDERS.get (provider)
+
+   if not handler:
       console.fatal (f"Unknown AI provider: {provider}")
+
+   return handler (prompt, model)
 
 
 def _invoke (tier: str, prompt: str, spin: bool = True) -> str:

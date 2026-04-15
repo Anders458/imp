@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>imp — AI git CLI for commit messages, history, changelogs, and PRs</title>
+<meta name="description" content="imp is an AI-powered git CLI that writes Conventional Commits, splits dirty working trees into logical commits, rewrites past history, generates changelogs, opens pull requests, and resolves merge conflicts. Works with Claude or local Ollama.">
+<meta name="keywords" content="ai git, ai commit, ai commit message, conventional commits, ai changelog, ai pull request, ai merge conflict, claude cli, ollama, git workflow, aicommits alternative, opencommit alternative, git history, rewrite git history, semver, developer tools">
+<meta name="author" content="Anders">
+<link rel="canonical" href="https://anders458.github.io/imp/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="imp — AI git CLI for the entire workflow">
+<meta property="og:description" content="One CLI that writes commit messages, splits dirty trees into logical commits, tidies history, generates changelogs, opens PRs, and resolves merge conflicts. Claude or Ollama.">
+<meta property="og:image" content="https://raw.githubusercontent.com/anders458/imp/master/logo.png">
+<meta property="og:url" content="https://anders458.github.io/imp/">
+<meta property="og:site_name" content="imp">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="imp — AI git CLI for the entire workflow">
+<meta name="twitter:description" content="Commit messages, splits, history rewrites, changelogs, PRs, merge resolution. Claude or Ollama. MIT.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/anders458/imp/master/logo.png">
+
+<script type="application/ld+json">
+{
+   "@context": "https://schema.org",
+   "@type": "SoftwareApplication",
+   "name": "imp",
+   "alternateName": "imp-git",
+   "applicationCategory": "DeveloperApplication",
+   "operatingSystem": "Linux, macOS, Windows",
+   "url": "https://anders458.github.io/imp/",
+   "downloadUrl": "https://pypi.org/project/imp-git/",
+   "softwareVersion": "0.0.42",
+   "description": "AI-powered git CLI that writes Conventional Commits, splits dirty working trees, rewrites history, generates changelogs, opens pull requests, and resolves merge conflicts.",
+   "author": { "@type": "Person", "name": "Anders" },
+   "license": "https://opensource.org/licenses/MIT",
+   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+   "keywords": "ai git, ai commit message, conventional commits, claude, ollama, changelog, pull request"
+}
+</script>
+
+<style>
+:root { color-scheme: light dark; --fg: #1a1a1a; --bg: #fafafa; --muted: #666; --accent: #7c3aed; --code-bg: #f0f0f0; }
+@media (prefers-color-scheme: dark) { :root { --fg: #eee; --bg: #111; --muted: #999; --code-bg: #1f1f1f; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+main { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem; }
+header { text-align: center; margin-bottom: 3rem; }
+header img { width: 120px; }
+h1 { font-size: 2rem; margin: 1rem 0 0.5rem; }
+h2 { margin-top: 2.5rem; font-size: 1.4rem; }
+.tagline { color: var(--muted); font-size: 1.1rem; }
+.cta { display: flex; gap: 0.75rem; justify-content: center; margin: 1.5rem 0; flex-wrap: wrap; }
+.cta a { display: inline-block; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: 600; }
+.cta .primary { background: var(--accent); color: #fff; }
+.cta .secondary { border: 1px solid var(--muted); color: var(--fg); }
+pre, code { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+pre { background: var(--code-bg); padding: 1rem; border-radius: 6px; overflow-x: auto; }
+code { background: var(--code-bg); padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.9em; }
+pre code { background: none; padding: 0; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+th, td { padding: 0.5rem; border-bottom: 1px solid var(--code-bg); text-align: left; }
+ul { padding-left: 1.5rem; }
+footer { text-align: center; color: var(--muted); margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--code-bg); font-size: 0.9rem; }
+a { color: var(--accent); }
+.demo { width: 100%; border-radius: 6px; margin: 1rem 0; }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+   <img src="https://raw.githubusercontent.com/anders458/imp/master/logo.png" alt="imp logo">
+   <h1>imp</h1>
+   <p class="tagline">AI git CLI for commit messages, history, changelogs, and PRs.</p>
+   <div class="cta">
+      <a class="primary" href="https://github.com/anders458/imp">View on GitHub</a>
+      <a class="secondary" href="https://pypi.org/project/imp-git/">Install from PyPI</a>
+   </div>
+</header>
+
+<h2>What it does</h2>
+<p><strong>imp</strong> rewrites a dirty working tree into clean <a href="https://www.conventionalcommits.org/">Conventional Commits</a> and ships them with a real changelog. One command, every time.</p>
+
+<img class="demo" src="https://raw.githubusercontent.com/anders458/imp/master/demo/tidy.gif" alt="imp tidy demo">
+
+<h2>Install</h2>
+<pre><code>pip install imp-git
+imp config
+imp doctor</code></pre>
+<p>Works with the <a href="https://docs.claude.com/en/docs/claude-code">Claude CLI</a> or local <a href="https://ollama.com">Ollama</a> models. No API key required for Ollama.</p>
+
+<h2>Commands</h2>
+<table>
+<tr><th>Command</th><th>Purpose</th></tr>
+<tr><td><code>imp commit</code></td><td>Generate a Conventional Commit from your diff</td></tr>
+<tr><td><code>imp split</code></td><td>Group a dirty working tree into logical commits</td></tr>
+<tr><td><code>imp tidy</code></td><td>Reword, squash, and drop past commits with AI</td></tr>
+<tr><td><code>imp pr</code></td><td>Open a pull request with AI title and body</td></tr>
+<tr><td><code>imp release</code></td><td>Squash, changelog, tag, and push a release</td></tr>
+<tr><td><code>imp resolve</code></td><td>AI-assisted merge conflict resolution</td></tr>
+<tr><td><code>imp review</code></td><td>AI code review on a branch or commit range</td></tr>
+</table>
+
+<h2>How it compares</h2>
+<table>
+<tr><th></th><th>imp</th><th>aicommits</th><th>OpenCommit</th></tr>
+<tr><td>Commit messages</td><td>✅</td><td>✅</td><td>✅</td></tr>
+<tr><td>Split dirty tree</td><td>✅</td><td>❌</td><td>❌</td></tr>
+<tr><td>Rewrite history</td><td>✅</td><td>❌</td><td>❌</td></tr>
+<tr><td>AI changelog</td><td>✅</td><td>❌</td><td>❌</td></tr>
+<tr><td>AI PR</td><td>✅</td><td>❌</td><td>❌</td></tr>
+<tr><td>Merge conflict AI</td><td>✅</td><td>❌</td><td>❌</td></tr>
+<tr><td>Local Ollama</td><td>✅</td><td>partial</td><td>✅</td></tr>
+<tr><td>Claude CLI</td><td>✅</td><td>❌</td><td>❌</td></tr>
+</table>
+
+<h2>Why imp</h2>
+<ul>
+<li><code>git</code> doesn't write commit messages. You do. Badly, at 2am.</li>
+<li><code>git</code> doesn't group changes. You end up with <code>wip</code>, <code>fix stuff</code>, <code>more fixes</code>.</li>
+<li><code>git</code> doesn't enforce Conventional Commits. <code>imp</code> validates before anything lands.</li>
+<li><code>git</code> doesn't know what changed. <code>imp</code> reads the diff and writes the message.</li>
+</ul>
+
+<footer>
+MIT licensed · <a href="https://github.com/anders458/imp">github.com/anders458/imp</a> · <a href="https://pypi.org/project/imp-git/">pypi.org/project/imp-git</a>
+</footer>
+
+</main>
+</body>
+</html>

@@ -25,10 +25,6 @@ def _theirs_branch () -> str:
    return "incoming"
 
 
-def _checkout_side (path: str, side: str):
-   git.checkout_side (path, side)
-
-
 def _parse_response (raw: str) -> tuple [str, str]:
    if SEPARATOR in raw:
       parts = raw.split (SEPARATOR, 1)
@@ -129,7 +125,13 @@ def resolve (
    for path in files:
       console.label (path)
 
-      content = Path (path).read_text ()
+      try:
+         content = Path (path).read_text ()
+      except (OSError, UnicodeDecodeError) as e:
+         console.muted (f"Skipped (unreadable: {e})")
+         num_skipped += 1
+         continue
+
       has_markers = MARKER in content
 
       if not has_markers:
@@ -203,11 +205,11 @@ def resolve (
          git.add ([ path ])
          num_resolved += 1
       elif choice == "Ours":
-         _checkout_side (path, "ours")
+         git.checkout_side (path, "ours")
          git.add ([ path ])
          num_resolved += 1
       elif choice == "Theirs":
-         _checkout_side (path, "theirs")
+         git.checkout_side (path, "theirs")
          git.add ([ path ])
          num_resolved += 1
       elif choice == "Edit":

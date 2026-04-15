@@ -225,6 +225,10 @@ def count_behind () -> int:
    return _count_revs ("HEAD..@{u}")
 
 
+def count_between (a: str, b: str) -> int:
+   return _count_revs (f"{a}..{b}")
+
+
 def log_oneline (count: int = 10, rev_range: str = "") -> str:
    args = [ "log", "--oneline" ]
    if rev_range:
