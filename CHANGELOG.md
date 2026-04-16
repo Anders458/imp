@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.44] - 2026-04-15
+
+### Changed
+- Redesign landing page with tailwind and simplify marketing
+
 ## [0.0.43] - 2026-04-15
 
 ### Changed

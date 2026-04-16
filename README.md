@@ -8,9 +8,9 @@
 [![Python](https://img.shields.io/pypi/pyversions/imp-git.svg)](https://pypi.org/project/imp-git/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-`imp` is an AI-powered git CLI that writes Conventional Commits, splits dirty working trees into logical commits, rewrites past history, generates changelogs, opens pull requests, and resolves merge conflicts. Works with the **Claude CLI** or local **Ollama** models.
+`imp` is a git CLI that uses AI for the parts git leaves to you: commit messages, splitting dirty working trees into logical commits, rewriting past history, generating changelogs, opening pull requests, and resolving merge conflicts. It runs against the Claude CLI or a local Ollama model.
 
-If you've used [aicommits](https://github.com/Nutlope/aicommits) or [OpenCommit](https://github.com/di-sukharev/opencommit) and wanted them to cover the *whole* git workflow instead of just the commit message, that's `imp`.
+Comparable to [aicommits](https://github.com/Nutlope/aicommits) and [OpenCommit](https://github.com/di-sukharev/opencommit), but covers the whole workflow rather than only the commit message.
 
 ---
 
@@ -121,12 +121,13 @@ Add `--rc` for a release candidate, `--stable` to promote one.
 
 ---
 
-## Why not just use git?
+## Why imp
 
-- `git` doesn't write commit messages. You do. Badly, at 2am.
-- `git` doesn't group changes. You end up with `wip`, `fix stuff`, `more fixes`.
-- `git` doesn't validate commits. `imp` enforces [Conventional Commits](https://www.conventionalcommits.org/) before anything lands.
-- `git` doesn't know what changed. `imp` reads the diff and writes the message.
+- Commit messages, PR titles, PR bodies, and changelog entries are generated from the diff.
+- [Conventional Commits](https://www.conventionalcommits.org/) are validated before any commit lands.
+- A dirty working tree can be grouped into multiple logical commits in one step.
+- Merge conflicts can be resolved with AI assistance, with review prompts for each file.
+- `imp release` handles squash, changelog, tag, and push as one operation.
 
 ---
 
@@ -134,28 +135,28 @@ Add `--rc` for a release candidate, `--stable` to promote one.
 
 | | imp | aicommits | OpenCommit | commitizen |
 |---|---|---|---|---|
-| Commit message from diff | ✅ | ✅ | ✅ | ✋ manual prompt |
-| Conventional Commits | ✅ enforced | ✅ optional | ✅ optional | ✅ enforced |
-| Split dirty tree into commits | ✅ | ❌ | ❌ | ❌ |
-| Rewrite past history | ✅ `tidy` | ❌ | ❌ | ❌ |
-| AI changelog | ✅ | ❌ | ❌ | ✅ template-based |
-| AI PR title + body | ✅ | ❌ | ❌ | ❌ |
-| AI merge conflict resolution | ✅ | ❌ | ❌ | ❌ |
-| Local models (Ollama) | ✅ | partial | ✅ | n/a |
-| Claude CLI | ✅ | ❌ | ❌ | n/a |
+| Commit message from diff | yes | yes | yes | prompts you |
+| Conventional Commits | enforced | optional | optional | enforced |
+| Split dirty tree into commits | yes | — | — | — |
+| Rewrite past history | yes (`tidy`) | — | — | — |
+| AI changelog | yes | — | — | template |
+| AI PR title + body | yes | — | — | — |
+| AI merge conflict resolution | yes | — | — | — |
+| Local models (Ollama) | yes | partial | yes | n/a |
+| Claude CLI | yes | — | — | n/a |
 | Runtime deps | 3 | many (Node) | many (Node) | many (Python) |
 
-`aicommits` and `OpenCommit` are great if you only want commit messages. `imp` is for people who want the whole loop: dirty tree → clean commits → PR → release → changelog.
+`aicommits` and `OpenCommit` cover the commit-message step. `imp` covers the whole loop: dirty tree → clean commits → PR → release → changelog.
 
 ---
 
 ## When to use imp
 
-- You have a pile of unrelated edits and need clean, reviewable commits
-- You're about to push `wip: stuff` and know it
-- You're cutting a release and don't want to handwrite a changelog
-- You're opening a PR and the diff speaks for itself
-- You're resolving a merge conflict and want a second pair of eyes
+- A dirty working tree with unrelated edits that should be separate commits.
+- A release to cut, with changelog and tag.
+- A PR to open where the diff mostly explains itself.
+- A merge conflict where a second pair of eyes would help.
+- A past commit or range that needs to be rewritten into something cleaner.
 
 ---
 

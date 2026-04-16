@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>imp — AI git CLI for commit messages, history, changelogs, and PRs</title>
-<meta name="description" content="imp is an AI-powered git CLI that writes Conventional Commits, splits dirty working trees into logical commits, rewrites past history, generates changelogs, opens pull requests, and resolves merge conflicts. Works with Claude or local Ollama.">
+<meta name="description" content="imp is a git CLI that uses AI for the parts git leaves to you: commit messages, splitting dirty working trees, rewriting history, changelogs, pull requests, and merge conflicts. Runs against the Claude CLI or local Ollama.">
 <meta name="keywords" content="ai git, ai commit, ai commit message, conventional commits, ai changelog, ai pull request, ai merge conflict, claude cli, ollama, git workflow, aicommits alternative, opencommit alternative, git history, rewrite git history, semver, developer tools">
 <meta name="author" content="Anders">
 <link rel="canonical" href="https://anders458.github.io/imp/">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="imp — AI git CLI for the entire workflow">
-<meta property="og:description" content="One CLI that writes commit messages, splits dirty trees into logical commits, tidies history, generates changelogs, opens PRs, and resolves merge conflicts. Claude or Ollama.">
+<meta property="og:title" content="imp — AI git CLI for the whole workflow">
+<meta property="og:description" content="Commit messages, splits, history rewrites, changelogs, PRs, and merge resolution. Runs against the Claude CLI or local Ollama.">
 <meta property="og:image" content="https://raw.githubusercontent.com/anders458/imp/master/logo.png">
 <meta property="og:url" content="https://anders458.github.io/imp/">
 <meta property="og:site_name" content="imp">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="imp — AI git CLI for the entire workflow">
+<meta name="twitter:title" content="imp — AI git CLI for the whole workflow">
 <meta name="twitter:description" content="Commit messages, splits, history rewrites, changelogs, PRs, merge resolution. Claude or Ollama. MIT.">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/anders458/imp/master/logo.png">
 
@@ -32,8 +32,7 @@
    "operatingSystem": "Linux, macOS, Windows",
    "url": "https://anders458.github.io/imp/",
    "downloadUrl": "https://pypi.org/project/imp-git/",
-   "softwareVersion": "0.0.42",
-   "description": "AI-powered git CLI that writes Conventional Commits, splits dirty working trees, rewrites history, generates changelogs, opens pull requests, and resolves merge conflicts.",
+   "description": "A git CLI that uses AI for commit messages, history rewrites, changelogs, pull requests, and merge conflict resolution. Runs against the Claude CLI or local Ollama.",
    "author": { "@type": "Person", "name": "Anders" },
    "license": "https://opensource.org/licenses/MIT",
    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -41,95 +40,335 @@
 }
 </script>
 
-<style>
-:root { color-scheme: light dark; --fg: #1a1a1a; --bg: #fafafa; --muted: #666; --accent: #7c3aed; --code-bg: #f0f0f0; }
-@media (prefers-color-scheme: dark) { :root { --fg: #eee; --bg: #111; --muted: #999; --code-bg: #1f1f1f; } }
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-body { font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--fg); background: var(--bg); }
-main { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem; }
-header { text-align: center; margin-bottom: 3rem; }
-header img { width: 120px; }
-h1 { font-size: 2rem; margin: 1rem 0 0.5rem; }
-h2 { margin-top: 2.5rem; font-size: 1.4rem; }
-.tagline { color: var(--muted); font-size: 1.1rem; }
-.cta { display: flex; gap: 0.75rem; justify-content: center; margin: 1.5rem 0; flex-wrap: wrap; }
-.cta a { display: inline-block; padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: 600; }
-.cta .primary { background: var(--accent); color: #fff; }
-.cta .secondary { border: 1px solid var(--muted); color: var(--fg); }
-pre, code { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
-pre { background: var(--code-bg); padding: 1rem; border-radius: 6px; overflow-x: auto; }
-code { background: var(--code-bg); padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.9em; }
-pre code { background: none; padding: 0; }
-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-th, td { padding: 0.5rem; border-bottom: 1px solid var(--code-bg); text-align: left; }
-ul { padding-left: 1.5rem; }
-footer { text-align: center; color: var(--muted); margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--code-bg); font-size: 0.9rem; }
-a { color: var(--accent); }
-.demo { width: 100%; border-radius: 6px; margin: 1rem 0; }
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+   theme: {
+      extend: {
+         colors: {
+            imp: {
+               bg: '#0A0A0A',
+               surface: '#111611',
+               code: '#0d120d',
+               green: '#4ADE00',
+               dim: '#2d8a00',
+               glow: '#7FFF20',
+               border: '#1E2D1E',
+            }
+         },
+         fontFamily: {
+            mono: [ 'ui-monospace', 'SF Mono', 'Cascadia Code', 'Menlo', 'monospace' ],
+         },
+      }
+   }
+}
+</script>
+
+<style type="text/tailwindcss">
+   body {
+      background-image:
+         radial-gradient(ellipse 80% 60% at 50% 0%, #0d1f0d 0%, transparent 60%),
+         radial-gradient(ellipse 60% 40% at 50% 100%, #0a160a 0%, transparent 50%);
+      background-attachment: fixed;
+   }
+
+   @layer utilities {
+      .logo-glow {
+         filter: drop-shadow(0 0 40px rgba(74, 222, 0, 0.25));
+      }
+   }
 </style>
 </head>
-<body>
-<main>
 
-<header>
-   <img src="https://raw.githubusercontent.com/anders458/imp/master/logo.png" alt="imp logo">
-   <h1>imp</h1>
-   <p class="tagline">AI git CLI for commit messages, history, changelogs, and PRs.</p>
-   <div class="cta">
-      <a class="primary" href="https://github.com/anders458/imp">View on GitHub</a>
-      <a class="secondary" href="https://pypi.org/project/imp-git/">Install from PyPI</a>
+<body class="bg-imp-bg text-gray-200 antialiased leading-relaxed">
+
+<!-- hero -->
+<div class="text-center px-6 pt-20 pb-12">
+   <img src="https://raw.githubusercontent.com/anders458/imp/master/logo.png" alt="imp" class="w-36 mx-auto logo-glow">
+
+   <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mt-6 mb-3 leading-tight">
+      AI for the parts of <span class="text-imp-green">git</span> you skip.
+   </h1>
+
+   <p class="text-gray-400 text-lg max-w-xl mx-auto mb-6 leading-relaxed">
+      A CLI that writes commit messages, splits dirty trees into logical commits, rewrites past history, generates changelogs, opens pull requests, and resolves merge conflicts.
+   </p>
+
+   <div class="inline-flex items-center gap-3 bg-imp-code border border-imp-border rounded-lg px-4 py-3 font-mono text-imp-green mb-6">
+      <span class="text-gray-500 select-none">$</span> pip install imp-git
    </div>
-</header>
 
-<h2>What it does</h2>
-<p><strong>imp</strong> rewrites a dirty working tree into clean <a href="https://www.conventionalcommits.org/">Conventional Commits</a> and ships them with a real changelog. One command, every time.</p>
+   <div class="flex gap-3 justify-center flex-wrap">
+      <a href="https://github.com/anders458/imp"
+         class="inline-block px-6 py-2.5 rounded-lg font-semibold bg-imp-green text-imp-bg hover:bg-imp-glow hover:shadow-[0_0_20px_rgba(74,222,0,0.3)] transition-all">
+         GitHub
+      </a>
+      <a href="https://pypi.org/project/imp-git/"
+         class="inline-block px-6 py-2.5 rounded-lg font-semibold border border-imp-border text-gray-200 hover:border-imp-dim hover:text-imp-green transition-all">
+         PyPI
+      </a>
+   </div>
 
-<img class="demo" src="https://raw.githubusercontent.com/anders458/imp/master/demo/tidy.gif" alt="imp tidy demo">
+   <div class="flex gap-2 justify-center flex-wrap mt-5">
+      <a href="https://pypi.org/project/imp-git/"><img src="https://img.shields.io/pypi/v/imp-git.svg" alt="PyPI" class="h-5"></a>
+      <a href="https://pypi.org/project/imp-git/"><img src="https://img.shields.io/pypi/pyversions/imp-git.svg" alt="Python" class="h-5"></a>
+      <a href="https://github.com/anders458/imp/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT" class="h-5"></a>
+   </div>
+</div>
 
-<h2>Install</h2>
-<pre><code>pip install imp-git
-imp config
+<!-- demo -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">See it work</h2>
+
+   <img src="https://raw.githubusercontent.com/anders458/imp/master/demo/tidy.gif" alt="imp tidy"
+        class="w-full rounded-xl border border-imp-border mb-6">
+
+   <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
+      <div>
+         <div class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Before</div>
+         <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto"><code>$ git status
+ M src/auth.py
+ M src/api.py
+ M tests/test_auth.py
+ M README.md
+?? src/rate_limit.py</code></pre>
+      </div>
+      <div class="text-imp-green text-2xl font-bold pt-8 hidden md:block">→</div>
+      <div>
+         <div class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">After <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">imp split</code></div>
+         <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto"><code>$ git log --oneline
+a1b2c3d feat(auth): add rate limiting
+e4f5g6h test(auth): cover edge cases
+i7j8k9l docs: document auth flags</code></pre>
+      </div>
+   </div>
+</div>
+</section>
+
+<!-- features -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">What it does</h2>
+
+   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp commit</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Generate a Conventional Commit message from your staged diff. Review, edit, or accept.</div>
+      </div>
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp split</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Group a dirty working tree into multiple logical commits. One command, several clean commits.</div>
+      </div>
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp tidy</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Rewrite past commits: reword, squash, or drop. AI reads the history and proposes a plan.</div>
+      </div>
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp pr</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Open a pull request with an AI-generated title and body derived from the branch diff.</div>
+      </div>
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp release</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Squash, write a changelog entry, tag a semver release, and push. Rolls back on failure.</div>
+      </div>
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp resolve</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Walk through merge conflicts file-by-file. AI suggests a resolution; you accept, edit, or override.</div>
+      </div>
+   </div>
+</div>
+</section>
+
+<!-- more demos -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">More examples</h2>
+
+   <h3 class="text-lg font-semibold mt-6 mb-3">Commit</h3>
+   <img src="https://raw.githubusercontent.com/anders458/imp/master/demo/commit.gif" alt="imp commit"
+        class="w-full rounded-xl border border-imp-border mb-3">
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto"><code>$ imp commit -a
+→ feat: add rate limiting to API endpoints
+  Use this message? [Yes / Edit / No]</code></pre>
+
+   <h3 class="text-lg font-semibold mt-8 mb-3">Pull request</h3>
+   <img src="https://raw.githubusercontent.com/anders458/imp/master/demo/pr.gif" alt="imp pr"
+        class="w-full rounded-xl border border-imp-border mb-3">
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto"><code>$ imp pr
+→ Title: feat: rate limit auth endpoints
+→ Body:  ## Summary
+         Adds per-IP rate limiting to /login and /register...
+  Create PR? [Yes / Edit / No]</code></pre>
+
+   <h3 class="text-lg font-semibold mt-8 mb-3">Release</h3>
+   <img src="https://raw.githubusercontent.com/anders458/imp/master/demo/release.gif" alt="imp release"
+        class="w-full rounded-xl border border-imp-border mb-3">
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto"><code>$ imp release
+→ Bump: patch / minor / major
+→ Squashes commits, writes CHANGELOG.md, tags v0.0.1, pushes.</code></pre>
+</div>
+</section>
+
+<!-- comparison -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">How imp compares</h2>
+
+   <div class="overflow-x-auto">
+   <table class="w-full text-sm border-collapse">
+      <thead>
+         <tr>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4"></th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4">imp</th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4">aicommits</th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4">OpenCommit</th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3">commitizen</th>
+         </tr>
+      </thead>
+      <tbody class="divide-y divide-imp-border">
+         <tr><td class="py-2.5 pr-4">Commit message from diff</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5">prompts you</td></tr>
+         <tr><td class="py-2.5 pr-4">Conventional Commits</td><td class="py-2.5 pr-4">enforced</td><td class="py-2.5 pr-4">optional</td><td class="py-2.5 pr-4">optional</td><td class="py-2.5">enforced</td></tr>
+         <tr><td class="py-2.5 pr-4">Split dirty tree into commits</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 text-gray-600">—</td></tr>
+         <tr><td class="py-2.5 pr-4">Rewrite past history</td><td class="py-2.5 pr-4">yes (<code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">tidy</code>)</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 text-gray-600">—</td></tr>
+         <tr><td class="py-2.5 pr-4">AI changelog</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5">template</td></tr>
+         <tr><td class="py-2.5 pr-4">AI PR title + body</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 text-gray-600">—</td></tr>
+         <tr><td class="py-2.5 pr-4">AI merge conflict resolution</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 text-gray-600">—</td></tr>
+         <tr><td class="py-2.5 pr-4">Local models (Ollama)</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4">partial</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 text-gray-500">n/a</td></tr>
+         <tr><td class="py-2.5 pr-4">Claude CLI</td><td class="py-2.5 pr-4">yes</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 pr-4 text-gray-600">—</td><td class="py-2.5 text-gray-500">n/a</td></tr>
+         <tr><td class="py-2.5 pr-4">Runtime deps</td><td class="py-2.5 pr-4">3</td><td class="py-2.5 pr-4">many (Node)</td><td class="py-2.5 pr-4">many (Node)</td><td class="py-2.5">many (Python)</td></tr>
+      </tbody>
+   </table>
+   </div>
+
+   <p class="text-gray-500 mt-4 text-sm">
+      <a href="https://github.com/Nutlope/aicommits" class="text-imp-green hover:text-imp-glow">aicommits</a> and
+      <a href="https://github.com/di-sukharev/opencommit" class="text-imp-green hover:text-imp-glow">OpenCommit</a>
+      cover the commit-message step. <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">imp</code> covers the whole loop: dirty tree → clean commits → PR → release → changelog.
+   </p>
+</div>
+</section>
+
+<!-- install -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">Install</h2>
+
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto mb-4"><code>pip install imp-git
+# or try without installing:
+uvx --from imp-git imp doctor
+pipx run --spec imp-git imp doctor</code></pre>
+
+   <p class="mb-3">Configure your AI provider:</p>
+
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto mb-4"><code>imp config
 imp doctor</code></pre>
-<p>Works with the <a href="https://docs.claude.com/en/docs/claude-code">Claude CLI</a> or local <a href="https://ollama.com">Ollama</a> models. No API key required for Ollama.</p>
 
-<h2>Commands</h2>
-<table>
-<tr><th>Command</th><th>Purpose</th></tr>
-<tr><td><code>imp commit</code></td><td>Generate a Conventional Commit from your diff</td></tr>
-<tr><td><code>imp split</code></td><td>Group a dirty working tree into logical commits</td></tr>
-<tr><td><code>imp tidy</code></td><td>Reword, squash, and drop past commits with AI</td></tr>
-<tr><td><code>imp pr</code></td><td>Open a pull request with AI title and body</td></tr>
-<tr><td><code>imp release</code></td><td>Squash, changelog, tag, and push a release</td></tr>
-<tr><td><code>imp resolve</code></td><td>AI-assisted merge conflict resolution</td></tr>
-<tr><td><code>imp review</code></td><td>AI code review on a branch or commit range</td></tr>
-</table>
+   <p>Works with the <a href="https://docs.claude.com/en/docs/claude-code" class="text-imp-green hover:text-imp-glow">Claude CLI</a> or local <a href="https://ollama.com" class="text-imp-green hover:text-imp-glow">Ollama</a> models. No API key required for Ollama.</p>
+</div>
+</section>
 
-<h2>How it compares</h2>
-<table>
-<tr><th></th><th>imp</th><th>aicommits</th><th>OpenCommit</th></tr>
-<tr><td>Commit messages</td><td>✅</td><td>✅</td><td>✅</td></tr>
-<tr><td>Split dirty tree</td><td>✅</td><td>❌</td><td>❌</td></tr>
-<tr><td>Rewrite history</td><td>✅</td><td>❌</td><td>❌</td></tr>
-<tr><td>AI changelog</td><td>✅</td><td>❌</td><td>❌</td></tr>
-<tr><td>AI PR</td><td>✅</td><td>❌</td><td>❌</td></tr>
-<tr><td>Merge conflict AI</td><td>✅</td><td>❌</td><td>❌</td></tr>
-<tr><td>Local Ollama</td><td>✅</td><td>partial</td><td>✅</td></tr>
-<tr><td>Claude CLI</td><td>✅</td><td>❌</td><td>❌</td></tr>
-</table>
+<!-- commands -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">Commands</h2>
 
-<h2>Why imp</h2>
-<ul>
-<li><code>git</code> doesn't write commit messages. You do. Badly, at 2am.</li>
-<li><code>git</code> doesn't group changes. You end up with <code>wip</code>, <code>fix stuff</code>, <code>more fixes</code>.</li>
-<li><code>git</code> doesn't enforce Conventional Commits. <code>imp</code> validates before anything lands.</li>
-<li><code>git</code> doesn't know what changed. <code>imp</code> reads the diff and writes the message.</li>
-</ul>
+   <div class="overflow-x-auto">
+   <table class="w-full text-sm border-collapse">
+      <thead>
+         <tr>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4">Command</th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3">Purpose</th>
+         </tr>
+      </thead>
+      <tbody class="divide-y divide-imp-border">
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp commit [-a] [-p] [-y] [-E glob] [-w hint]</td><td class="py-2">Generate commit message from diff</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp amend [-y] [-w hint]</td><td class="py-2">Rewrite last commit message</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp split [-y] [-w hint]</td><td class="py-2">Group dirty files into logical commits</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp tidy [range] [-y] [-w hint]</td><td class="py-2">Rewrite past history: reword, squash, drop</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp undo [N]</td><td class="py-2">Undo last N commits, keep changes</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp revert [hash] [-y] [-w hint]</td><td class="py-2">Safely revert a commit</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp push [-w hint]</td><td class="py-2">Push, sets upstream on first push</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp sync [-y]</td><td class="py-2">Pull, rebase, push</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp resolve [--ours] [--theirs] [-y] [-w hint]</td><td class="py-2">AI-assisted conflict resolution</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp branch &lt;desc&gt; [-y] [-w hint]</td><td class="py-2">Create branch from description</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp fix &lt;issue&gt; [-y] [-w hint]</td><td class="py-2">Create branch from GitHub issue</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp pr [-y] [-w hint]</td><td class="py-2">Open PR with AI title and body</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp done [target] [-y]</td><td class="py-2">Merge branch, clean up local and remote</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp review [-l N] [-f] [-d] [-w hint]</td><td class="py-2">AI code review</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp changelog [--since tag] [--apply] [-y]</td><td class="py-2">Regenerate CHANGELOG.md</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp status</td><td class="py-2">Repo overview</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp log [-n N] [ref]</td><td class="py-2">Pretty commit graph</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp release [--rc] [--stable]</td><td class="py-2">Squash, changelog, tag, push</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp ship [level] [--rc] [--stable] [-w hint]</td><td class="py-2">Split, then release</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp setup &lt;url&gt;</td><td class="py-2">Init repo, remote, .gitignore</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp config</td><td class="py-2">Configure AI provider</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp doctor</td><td class="py-2">Verify install and config</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp clean</td><td class="py-2">Delete merged branches</td></tr>
+      </tbody>
+   </table>
+   </div>
 
-<footer>
-MIT licensed · <a href="https://github.com/anders458/imp">github.com/anders458/imp</a> · <a href="https://pypi.org/project/imp-git/">pypi.org/project/imp-git</a>
+   <p class="mt-4 mb-3">Any AI command accepts <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">-w</code> / <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">--whisper</code> to steer the AI without overriding its output:</p>
+
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto"><code>imp commit -a -w "use IMP-42 as ticket"
+imp review -w "focus on error handling"</code></pre>
+</div>
+</section>
+
+<!-- config -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">Configuration</h2>
+
+   <p class="mb-3"><code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">imp config</code> writes <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">~/.config/imp/config.json</code> (or <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">$XDG_CONFIG_HOME/imp/config.json</code>).</p>
+
+   <pre class="bg-imp-code border border-imp-border rounded-lg px-5 py-4 text-sm overflow-x-auto mb-4"><code>{
+   "provider": "claude",
+   "model:fast": "haiku",
+   "model:smart": "sonnet"
+}</code></pre>
+
+   <div class="overflow-x-auto">
+   <table class="w-full text-sm border-collapse">
+      <thead>
+         <tr>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4">Key</th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3 pr-4">Purpose</th>
+            <th class="text-left text-imp-green text-xs uppercase tracking-wider font-semibold pb-3">Values</th>
+         </tr>
+      </thead>
+      <tbody class="divide-y divide-imp-border">
+         <tr><td class="py-2.5 pr-4 font-mono text-xs">provider</td><td class="py-2.5 pr-4">AI backend</td><td class="py-2.5 font-mono text-xs">claude, ollama</td></tr>
+         <tr><td class="py-2.5 pr-4 font-mono text-xs">model:fast</td><td class="py-2.5 pr-4">Short prompts (commit messages, dates)</td><td class="py-2.5">Any model name your provider knows</td></tr>
+         <tr><td class="py-2.5 pr-4 font-mono text-xs">model:smart</td><td class="py-2.5 pr-4">Reasoning prompts (split, tidy, resolve, review)</td><td class="py-2.5">Any model name your provider knows</td></tr>
+      </tbody>
+   </table>
+   </div>
+
+   <p class="mt-4 text-sm">Each key has a matching env var (<code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">IMP_AI_PROVIDER</code>, <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">IMP_AI_MODEL_FAST</code>, <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">IMP_AI_MODEL_SMART</code>) that takes precedence over the file.</p>
+</div>
+</section>
+
+<!-- requirements -->
+<section class="border-t border-imp-border py-12">
+<div class="max-w-3xl mx-auto px-6">
+   <h2 class="text-2xl font-bold mb-5">Requirements</h2>
+   <ul class="list-disc pl-5 space-y-1.5">
+      <li>Python 3.10+</li>
+      <li>git</li>
+      <li><a href="https://cli.github.com" class="text-imp-green hover:text-imp-glow">gh</a> (optional, for <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">fix</code>, <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">pr</code>, <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">release</code>)</li>
+      <li>An AI backend: the <a href="https://docs.claude.com/en/docs/claude-code" class="text-imp-green hover:text-imp-glow">Claude CLI</a> or a running <a href="https://ollama.com" class="text-imp-green hover:text-imp-glow">Ollama</a> instance</li>
+   </ul>
+</div>
+</section>
+
+<!-- footer -->
+<footer class="text-center text-gray-500 py-10 border-t border-imp-border text-sm">
+   <a href="https://github.com/anders458/imp" class="text-gray-500 hover:text-imp-green">GitHub</a> ·
+   <a href="https://pypi.org/project/imp-git/" class="text-gray-500 hover:text-imp-green">PyPI</a> ·
+   <a href="https://github.com/anders458/imp/blob/master/LICENSE" class="text-gray-500 hover:text-imp-green">MIT</a>
 </footer>
 
-</main>
 </body>
 </html>
