@@ -304,8 +304,8 @@ imp doctor</code></pre>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp status</td><td class="py-2">Repo overview</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp log [-n N] [ref]</td><td class="py-2">Pretty commit graph</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp release [--patch|--minor|--major] [--rc|--stable]</td><td class="py-2">Squash, changelog, tag, push</td></tr>
-         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp ship [--patch|--minor|--major] [--rc|--stable] [-w hint]</td><td class="py-2">Split, then release</td></tr>
-         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp fleet [path] [--patch|--minor|--major] [--rc|--stable] [-d N] [--dry-run]</td><td class="py-2">Ship every dirty repo in a directory</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp ship [--patch|--minor|--major] [--rc|--stable] [--squash] [-w hint]</td><td class="py-2">Split, then release. <code class="bg-imp-code border border-imp-border px-1.5 py-0.5 rounded text-xs">--squash</code> collapses into one release commit</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp fleet [path] [--patch|--minor|--major] [--rc|--stable] [--squash] [-d N] [--dry-run]</td><td class="py-2">Ship every dirty repo in a directory</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp setup &lt;url&gt;</td><td class="py-2">Init repo, remote, .gitignore</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp config</td><td class="py-2">Configure AI provider</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp doctor</td><td class="py-2">Verify install and config</td></tr>

@@ -194,8 +194,8 @@ Flags apply to every repo; omit them to be prompted per-repo.
 | `imp status` | Repo overview |
 | `imp log [-n N] [ref]` | Pretty commit graph |
 | `imp release [--patch\|--minor\|--major] [--rc\|--stable]` | Squash, changelog, tag, push |
-| `imp ship [--patch\|--minor\|--major] [--rc\|--stable] [-w hint]` | Split, then release |
-| `imp fleet [path] [--patch\|--minor\|--major] [--rc\|--stable] [-d N] [--dry-run]` | Ship every dirty repo in a directory |
+| `imp ship [--patch\|--minor\|--major] [--rc\|--stable] [--squash] [-w hint]` | Split, then release. `--squash` collapses into one release commit |
+| `imp fleet [path] [--patch\|--minor\|--major] [--rc\|--stable] [--squash] [-d N] [--dry-run]` | Ship every dirty repo in a directory |
 | `imp setup <url>` | Init repo, remote, `.gitignore` |
 | `imp config` | Configure AI provider |
 | `imp doctor` | Verify install and config |
