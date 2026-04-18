@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.46] - 2026-04-18
+
+### Added
+- Add --squash flag to ship and fleet commands
+
+### Changed
+- Document --squash flag for ship and fleet
+
 ## [0.0.45] - 2026-04-18
 
 ### Added
