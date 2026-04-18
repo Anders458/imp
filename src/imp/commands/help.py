@@ -44,8 +44,9 @@ def help ():
    console.out.print ("  imp pr                                    [muted]# create pull request[/muted]")
    console.out.print ("  imp done                                  [muted]# clean up after PR merge[/muted]")
    console.out.print ("  imp clean                                 [muted]# delete merged branches[/muted]")
-   console.out.print ("  imp release                               [muted]# squash + changelog + tag + push[/muted]")
-   console.out.print ("  imp ship [level]                           [muted]# commit + release, no prompts[/muted]")
+   console.out.print ("  imp release [--patch|--minor|--major]     [muted]# squash + changelog + tag + push[/muted]")
+   console.out.print ("  imp ship    [--patch|--minor|--major]     [muted]# commit + release, no prompts[/muted]")
+   console.out.print ("  imp fleet   [path]                        [muted]# ship every dirty repo in a directory[/muted]")
    console.out.print ()
 
    console.out.print ("[bold]Setup[/bold]")

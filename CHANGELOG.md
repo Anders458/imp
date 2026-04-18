@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.0.45] - 2026-04-18
+
+### Added
+- Add fleet command and --patch/--minor/--major flags to ship and release
+
+### Changed
+- Document fleet command and bump flag changes
+
 ## [0.0.44] - 2026-04-15
 
 ### Changed

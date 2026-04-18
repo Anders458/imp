@@ -176,6 +176,10 @@ i7j8k9l docs: document auth flags</code></pre>
          <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp resolve</code></div>
          <div class="text-gray-400 text-sm leading-snug">Walk through merge conflicts file-by-file. AI suggests a resolution; you accept, edit, or override.</div>
       </div>
+      <div class="bg-imp-surface border border-imp-border rounded-xl p-5">
+         <div class="font-bold mb-1"><code class="text-imp-green bg-transparent border-none p-0 text-sm">imp fleet</code></div>
+         <div class="text-gray-400 text-sm leading-snug">Scan a directory for git repos and ship every dirty one. Per-repo prompts for bump and release type, or pass flags to apply to all.</div>
+      </div>
    </div>
 </div>
 </section>
@@ -299,8 +303,9 @@ imp doctor</code></pre>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp changelog [--since tag] [--apply] [-y]</td><td class="py-2">Regenerate CHANGELOG.md</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp status</td><td class="py-2">Repo overview</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp log [-n N] [ref]</td><td class="py-2">Pretty commit graph</td></tr>
-         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp release [--rc] [--stable]</td><td class="py-2">Squash, changelog, tag, push</td></tr>
-         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp ship [level] [--rc] [--stable] [-w hint]</td><td class="py-2">Split, then release</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp release [--patch|--minor|--major] [--rc|--stable]</td><td class="py-2">Squash, changelog, tag, push</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp ship [--patch|--minor|--major] [--rc|--stable] [-w hint]</td><td class="py-2">Split, then release</td></tr>
+         <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp fleet [path] [--patch|--minor|--major] [--rc|--stable] [-d N] [--dry-run]</td><td class="py-2">Ship every dirty repo in a directory</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp setup &lt;url&gt;</td><td class="py-2">Init repo, remote, .gitignore</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp config</td><td class="py-2">Configure AI provider</td></tr>
          <tr><td class="py-2 pr-4 font-mono text-xs whitespace-nowrap">imp doctor</td><td class="py-2">Verify install and config</td></tr>

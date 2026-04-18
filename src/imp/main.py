@@ -11,6 +11,7 @@ from imp.commands.config import configure
 from imp.commands.doctor import doctor
 from imp.commands.done import done
 from imp.commands.fix import fix
+from imp.commands.fleet import fleet
 from imp.commands.help import help
 from imp.commands.log import log
 from imp.commands.pr import pr
@@ -56,10 +57,10 @@ def main (
 
 _commands = [
    amend, branch, changelog, clean, commit,
-   doctor, done, fix, help, log,
-   pr, push, release, resolve, revert,
-   review, setup, ship, split, status,
-   sync, tidy, undo,
+   doctor, done, fix, fleet, help,
+   log, pr, push, release, resolve,
+   revert, review, setup, ship, split,
+   status, sync, tidy, undo,
 ]
 
 for _cmd in _commands:

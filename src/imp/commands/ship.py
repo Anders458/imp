@@ -11,11 +11,24 @@ from imp.commands.release import (
 from imp.commands.split import do_split
 
 
+def _resolve_level (patch: bool, minor: bool, major: bool) -> str:
+   if sum ([ patch, minor, major ]) > 1:
+      console.fatal ("--patch, --minor, --major are mutually exclusive")
+
+   if major:
+      return "major"
+   if minor:
+      return "minor"
+   return "patch"
+
+
 def ship (
-   level: str = typer.Argument ("patch", help="Version bump: patch, minor, or major"),
-   whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
+   patch: bool = typer.Option (False, "--patch", help="Bump patch version (default)"),
+   minor: bool = typer.Option (False, "--minor", help="Bump minor version"),
+   major: bool = typer.Option (False, "--major", help="Bump major version"),
    rc: bool = typer.Option (False, "--rc", help="Tag as pre-release candidate"),
    stable: bool = typer.Option (False, "--stable", help="Tag as stable release"),
+   whisper: str = typer.Option ("", "--whisper", "-w", help="Hint to guide the AI"),
 ):
    """Split changes into logical commits, then release.
 
@@ -26,9 +39,10 @@ def ship (
 
    git.require ()
 
-   if level not in ("patch", "minor", "major"):
-      console.hint ("use patch, minor, or major")
-      console.fatal (f"Invalid level: {level}")
+   if rc and stable:
+      console.fatal ("--rc and --stable are mutually exclusive")
+
+   level = _resolve_level (patch, minor, major)
 
    console.header ("Ship")
 
@@ -53,9 +67,6 @@ def ship (
    else:
       console.muted ("No staged changes, skipping commit")
       console.out.print ()
-
-   if rc and stable:
-      console.fatal ("--rc and --stable are mutually exclusive")
 
    base = git.base_branch ()
 

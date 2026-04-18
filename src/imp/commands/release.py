@@ -187,7 +187,7 @@ def do_release_rc (level: str):
       console.muted ("No remote, skipped push")
 
 
-def release_rc ():
+def release_rc (level: str = ""):
    git.require_clean ("imp commit first")
 
    tag, log, count = release_scope ()
@@ -204,28 +204,35 @@ def release_rc ():
    minor_rc = version.next_rc (minor_ver, git.rc_tags (minor_ver))
    major_rc = version.next_rc (major_ver, git.rc_tags (major_ver))
 
-   console.muted (f"Current stable: {current}")
-   console.out.print ()
-
-   choice = console.choose (
-      "Version target",
-      [
-         f"patch  {patch_rc}",
-         f"minor  {minor_rc}",
-         f"major  {major_rc}",
-         "quit",
-      ],
-   )
-
-   if choice.startswith ("patch"):
+   if level == "patch":
       new_ver = patch_rc
-   elif choice.startswith ("minor"):
+   elif level == "minor":
       new_ver = minor_rc
-   elif choice.startswith ("major"):
+   elif level == "major":
       new_ver = major_rc
    else:
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
+      console.muted (f"Current stable: {current}")
+      console.out.print ()
+
+      choice = console.choose (
+         "Version target",
+         [
+            f"patch  {patch_rc}",
+            f"minor  {minor_rc}",
+            f"major  {major_rc}",
+            "quit",
+         ],
+      )
+
+      if choice.startswith ("patch"):
+         new_ver = patch_rc
+      elif choice.startswith ("minor"):
+         new_ver = minor_rc
+      elif choice.startswith ("major"):
+         new_ver = major_rc
+      else:
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
 
    require_tag_available (new_ver)
 
@@ -243,7 +250,23 @@ def release_rc ():
       console.success ("Pushed to origin")
 
 
+def _level_from_flags (patch: bool, minor: bool, major: bool) -> str:
+   if sum ([ patch, minor, major ]) > 1:
+      console.fatal ("--patch, --minor, --major are mutually exclusive")
+
+   if major:
+      return "major"
+   if minor:
+      return "minor"
+   if patch:
+      return "patch"
+   return ""
+
+
 def release (
+   patch: bool = typer.Option (False, "--patch", help="Bump patch version"),
+   minor: bool = typer.Option (False, "--minor", help="Bump minor version"),
+   major: bool = typer.Option (False, "--major", help="Bump major version"),
    rc: bool = typer.Option (False, "--rc", help="Tag as pre-release candidate"),
    stable: bool = typer.Option (False, "--stable", help="Tag as stable release"),
 ):
@@ -260,11 +283,13 @@ def release (
    if rc and stable:
       console.fatal ("--rc and --stable are mutually exclusive")
 
+   level = _level_from_flags (patch, minor, major)
+
    base = git.base_branch ()
    current = git.branch ()
 
    if rc:
-      return release_rc ()
+      return release_rc (level)
    elif not stable and current != base:
       choice = console.choose (
          "Release type",
@@ -272,7 +297,7 @@ def release (
       )
 
       if choice.startswith ("rc"):
-         return release_rc ()
+         return release_rc (level)
       elif choice == "quit":
          console.muted ("Cancelled")
          raise typer.Exit (0)
@@ -290,31 +315,34 @@ def release (
 
    patch_ver, minor_ver, major_ver = _semver_bumps (current)
 
-   console.muted (f"Current: {current}")
-   console.out.print ()
-
-   choice = console.choose (
-      "Version bump",
-      [
-         f"patch  {patch_ver}",
-         f"minor  {minor_ver}",
-         f"major  {major_ver}",
-         "custom",
-         "quit",
-      ],
-   )
-
-   if choice.startswith ("patch"):
-      new_version = patch_ver
-   elif choice.startswith ("minor"):
-      new_version = minor_ver
-   elif choice.startswith ("major"):
-      new_version = major_ver
-   elif choice == "custom":
-      new_version = console.prompt ("Version:", patch_ver)
+   if level:
+      new_version = version.bump (current, level)
    else:
-      console.muted ("Cancelled")
-      raise typer.Exit (0)
+      console.muted (f"Current: {current}")
+      console.out.print ()
+
+      choice = console.choose (
+         "Version bump",
+         [
+            f"patch  {patch_ver}",
+            f"minor  {minor_ver}",
+            f"major  {major_ver}",
+            "custom",
+            "quit",
+         ],
+      )
+
+      if choice.startswith ("patch"):
+         new_version = patch_ver
+      elif choice.startswith ("minor"):
+         new_version = minor_ver
+      elif choice.startswith ("major"):
+         new_version = major_ver
+      elif choice == "custom":
+         new_version = console.prompt ("Version:", patch_ver)
+      else:
+         console.muted ("Cancelled")
+         raise typer.Exit (0)
 
    require_tag_available (new_version)
 

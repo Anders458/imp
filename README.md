@@ -75,10 +75,11 @@ Works with the Claude CLI or local Ollama models. No API key required for Ollama
 ## Usage
 
 ```bash
-imp split       # group dirty files into logical commits
-imp commit -a   # stage everything, generate a commit message
-imp pr          # open a PR with AI title and body
-imp release     # squash, changelog, tag, push
+imp split           # group dirty files into logical commits
+imp commit -a       # stage everything, generate a commit message
+imp pr              # open a PR with AI title and body
+imp release         # squash, changelog, tag, push
+imp fleet ~/code    # ship every dirty repo in a directory
 ```
 
 ---
@@ -117,7 +118,18 @@ $ imp release
 → Squashes commits, writes CHANGELOG.md, tags v0.0.1, pushes.
 ```
 
-Add `--rc` for a release candidate, `--stable` to promote one.
+Skip the chooser with `--patch`, `--minor`, or `--major`. Add `--rc` for a release candidate, `--stable` to promote one.
+
+### Fleet
+
+```bash
+$ imp fleet ~/Projects --patch --stable
+→ Scans for every git repo under ~/Projects
+→ Runs imp ship on each dirty one
+→ Prints a summary at the end
+```
+
+Flags apply to every repo; omit them to be prompted per-repo.
 
 ---
 
@@ -181,8 +193,9 @@ Add `--rc` for a release candidate, `--stable` to promote one.
 | `imp changelog [--since tag] [--apply] [-y]` | Regenerate CHANGELOG.md |
 | `imp status` | Repo overview |
 | `imp log [-n N] [ref]` | Pretty commit graph |
-| `imp release [--rc] [--stable]` | Squash, changelog, tag, push |
-| `imp ship [level] [--rc] [--stable] [-w hint]` | Split, then release |
+| `imp release [--patch\|--minor\|--major] [--rc\|--stable]` | Squash, changelog, tag, push |
+| `imp ship [--patch\|--minor\|--major] [--rc\|--stable] [-w hint]` | Split, then release |
+| `imp fleet [path] [--patch\|--minor\|--major] [--rc\|--stable] [-d N] [--dry-run]` | Ship every dirty repo in a directory |
 | `imp setup <url>` | Init repo, remote, `.gitignore` |
 | `imp config` | Configure AI provider |
 | `imp doctor` | Verify install and config |
